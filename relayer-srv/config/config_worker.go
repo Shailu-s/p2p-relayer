@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // WorkerConfig worker configuration struct
@@ -14,6 +15,8 @@ type WorkerConfig struct {
 	MatchingEngine      common.Address `json:"matching_engine_contract"`
 	GnosisContract      common.Address `json:"gnosis_contract"`
 	PositioningContract common.Address `json:"positioning_contract"`
+	IndexPriceOracle    common.Address `json:"index_price_oracle"`
+	MarkPriceOracle     common.Address `json:"mark_price_oracle"`
 	PeripheryContract   common.Address `json:"periphery_contract"`
 	GasLimit            int64          `json:"gas_limit"`
 	WorkerAddr          common.Address `json:"worker_addr"`
@@ -26,6 +29,8 @@ func (v *viperConfig) readWorkerConfig(chain string) WorkerConfig {
 		ChainName:           strings.ToUpper(chain),
 		WorkerAddr:          common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.worker_addr", chain))),
 		PositioningContract: common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.positioning_contract", chain))),
+		IndexPriceOracle:    common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.index_price_oracle", chain))),
+		MarkPriceOracle:     common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.mark_price_oracle", chain))),
 		PeripheryContract:   common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.periphery_contract", chain))),
 		GnosisContract:      common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.gnosis_contract", chain))),
 		MatchingEngine:      common.HexToAddress(v.GetString(fmt.Sprintf("workers.%s.matching_engine_contract", chain))),

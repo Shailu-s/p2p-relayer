@@ -908,6 +908,7 @@ func (_MarkPriceOracle *MarkPriceOracleTransactorSession) GrantTwapIntervalRole(
 	return _MarkPriceOracle.Contract.GrantTwapIntervalRole(&_MarkPriceOracle.TransactOpts, _positioningConfig)
 }
 
+
 // Initialize is a paid mutator transaction binding the contract method 0x86e553cf.
 //
 // Solidity: function initialize(uint256[] _priceCumulative, address[] _asset, bytes32[] _proofHash, address _admin) returns()
