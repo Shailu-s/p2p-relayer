@@ -23,6 +23,8 @@ import (
 	database "github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
 	"github.com/volmexfinance/relayers/relayer-srv/worker/abi/gnosis"
+	IndexPriceOracle "github.com/volmexfinance/relayers/relayer-srv/worker/abi/index_price_oracle"
+	MarkPriceOracle "github.com/volmexfinance/relayers/relayer-srv/worker/abi/mark_price_oracle"
 	Positioning "github.com/volmexfinance/relayers/relayer-srv/worker/abi/positioning"
 )
 
@@ -34,6 +36,8 @@ type WorkerConfig struct {
 	GnosisContract      common.Address `json:"gnosis_contract"`
 	PositioningContract common.Address `json:"positioning_contract"`
 	PeripheryContract   common.Address `json:"periphery_contract"`
+	IndexPriceOracle    common.Address `json:"index_price_oracle"`
+	MarkPriceOracle     common.Address `json:"mark_price_oracle"`
 	GasLimit            int64          `json:"gas_limit"`
 	WorkerAddr          common.Address `json:"worker_addr"`
 	StartBlockHeight    *big.Int       `json:"from_block"`
@@ -49,6 +53,8 @@ type Worker struct {
 	client              *ethclient.Client
 	gnosisContract      common.Address
 	positioningContract common.Address
+	indexPriceOracle    common.Address
+	markPriceOracle     common.Address
 	peripheryContract   common.Address
 	DB                  *database.DataBase
 	PrivateKey          string
@@ -161,6 +167,8 @@ func NewWorker(logger *logrus.Logger, cfg WorkerConfig, privateKey string, db *d
 		gnosisContract:      cfg.GnosisContract,
 		peripheryContract:   cfg.PeripheryContract,
 		positioningContract: cfg.PositioningContract,
+		indexPriceOracle:    cfg.IndexPriceOracle,
+		markPriceOracle:     cfg.MarkPriceOracle,
 		DB:                  db,
 		PrivateKey:          privateKey,
 	}
@@ -585,4 +593,94 @@ func (w *Worker) GetTransactionReceipt(TransactionHash string) (*types.Receipt, 
 		}
 	}
 	return txReceipt, er
+}
+
+func (w *Worker) GetMarkPriceOracle() common.Address {
+	return w.markPriceOracle
+}
+
+func (w *Worker) GetMarkPrice(index *big.Int) (*big.Int, error) {
+	twInterval, _ := new(big.Int).SetString("28800", 10)
+	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
+	markTwap, err := markPriceOracle.GetMarkSma(getCallOpts(), twInterval, index)
+	return markTwap, err
+}
+
+func (w *Worker) GetLastPrice(index *big.Int) (*big.Int, error) {
+	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
+	markTwap, err := markPriceOracle.GetLastPrice(getCallOpts(), index)
+	return markTwap, err
+}
+
+func (w *Worker) GetIndexPrice(index *big.Int) (*big.Int, error) {
+	indexPriceOracle, _ := IndexPriceOracle.NewIndexPriceOracle(w.indexPriceOracle, w.client)
+	indexTwap, err := indexPriceOracle.GetLastPrice(getCallOpts(), index)
+	return indexTwap, err
+}
+
+func (w *Worker) GetIndexByBaseToken(baseToken common.Address) (*big.Int, error) {
+	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
+	index, err := markPriceOracle.IndexByBaseToken(getCallOpts(), baseToken)
+	return index, err
+}
+
+func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
+	if order.OrderType == database.ORDER {
+		return true, nil
+	}
+	var baseToken string
+	if order.IsShort {
+		baseToken = order.MakeAsset().VirtualToken
+	} else {
+		baseToken = order.TakeAsset().VirtualToken
+	}
+	index, err := w.GetIndexByBaseToken(common.HexToAddress(baseToken))
+	if err != nil {
+		return false, err
+	}
+
+	var triggeredPrice *big.Int
+	switch order.OrderType {
+	case database.STOP_LOSS_INDEX_PRICE, database.TAKE_PROFIT_INDEX_PRICE:
+		triggeredPrice, err = w.GetIndexPrice(index)
+		if err != nil {
+			return false, err
+		}
+	case database.STOP_LOSS_MARK_PRICE, database.TAKE_PROFIT_MARK_PRICE:
+		triggeredPrice, err = w.GetMarkPrice(index)
+		if err != nil {
+			return false, err
+		}
+	case database.STOP_LOSS_LAST_PRICE, database.TAKE_PROFIT_LAST_PRICE:
+		triggeredPrice, err = w.GetLastPrice(index)
+		if err != nil {
+			return false, err
+		}
+	default:
+		return false, nil
+	}
+
+	triggerPrice, _ := new(big.Int).SetString(order.TriggerPrice, 10)
+
+	return validateOrderTriggerPrice(order, triggeredPrice, triggerPrice), nil
+}
+
+func validateOrderTriggerPrice(order *database.Order, triggeredPrice, triggerPrice *big.Int) bool {
+	isStopLoss := _checkLimitOrderType(order.OrderType, true)
+	result := triggeredPrice.Cmp(triggerPrice)
+
+	if order.IsShort == isStopLoss {
+		// Matching trigger price for a stop-loss order or not matching trigger price for a take-profit order
+		return result <= 0
+	} else {
+		// Matching trigger price for a take-profit order or not matching trigger price for a stop-loss order
+		return result >= 0
+	}
+}
+
+func _checkLimitOrderType(orderType string, isStopLoss bool) bool {
+	if isStopLoss {
+		return orderType == database.STOP_LOSS_INDEX_PRICE || orderType == database.STOP_LOSS_LAST_PRICE || orderType == database.STOP_LOSS_MARK_PRICE
+	}
+	return orderType == database.TAKE_PROFIT_INDEX_PRICE || orderType == database.TAKE_PROFIT_LAST_PRICE || orderType == database.TAKE_PROFIT_MARK_PRICE
 }

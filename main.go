@@ -38,6 +38,8 @@ func toWorkerConfig(config config.WorkerConfig) worker.WorkerConfig {
 		GnosisContract:      config.GnosisContract,
 		PositioningContract: config.PositioningContract,
 		PeripheryContract:   config.PeripheryContract,
+		IndexPriceOracle:    config.IndexPriceOracle,
+		MarkPriceOracle:     config.MarkPriceOracle,
 		GasLimit:            config.GasLimit,
 		WorkerAddr:          config.WorkerAddr,
 		StartBlockHeight:    config.StartBlockHeight,

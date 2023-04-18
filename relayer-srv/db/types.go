@@ -62,3 +62,11 @@ const (
 	TransactionLogStatusTypePending   TransactionLogStatusType = 2
 	TransactionLogStatusTypeConfirmed TransactionLogStatusType = 3
 )
+
+const ORDER = "0xf555eb98"                   // bytes4(keccack256(abi.encodePacked("Order")))
+const STOP_LOSS_INDEX_PRICE = "0x835d5c1e"   // bytes4(keccak256(abi.encodePacked("StopLossIndexPrice")));
+const STOP_LOSS_LAST_PRICE = "0xd9ed8042"    //bytes4(keccak256(abi.encodePacked("StopLossLastPrice")));
+const STOP_LOSS_MARK_PRICE = "0xe144c7ec"    //bytes4(keccak256(abi.encodePacked("StopLossMarkPrice")));
+const TAKE_PROFIT_INDEX_PRICE = "0x67393efa" //bytes4(keccak256(abi.encodePacked("TakeProfitIndexPrice")));
+const TAKE_PROFIT_LAST_PRICE = "0xc7dc86f6"  //bytes4(keccak256(abi.encodePacked("TakeProfitLastPrice")));
+const TAKE_PROFIT_MARK_PRICE = "0xb6d64e04"  //bytes4(keccak256(abi.encodePacked("TakeProfitMarkPrice")));

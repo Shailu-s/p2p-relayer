@@ -41,22 +41,16 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "uint256",
+          "indexed": false,
+          "internalType": "uint256[]",
           "name": "index",
-          "type": "uint256"
+          "type": "uint256[]"
         },
         {
           "indexed": false,
-          "internalType": "uint256",
+          "internalType": "uint256[]",
           "name": "underlyingPrice",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "markPrice",
-          "type": "uint256"
+          "type": "uint256[]"
         },
         {
           "indexed": false,
@@ -184,7 +178,7 @@
     },
     {
       "inputs": [],
-      "name": "PRICE_ORACLE_ADMIN",
+      "name": "INITIAL_TIMESTAMP_ROLE",
       "outputs": [
         {
           "internalType": "bytes32",
@@ -197,7 +191,7 @@
     },
     {
       "inputs": [],
-      "name": "SMA_INTERVAL_ROLE",
+      "name": "PRICE_ORACLE_ADMIN",
       "outputs": [
         {
           "internalType": "bytes32",
@@ -219,6 +213,16 @@
           "internalType": "address[]",
           "name": "_asset",
           "type": "address[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "_proofHash",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "_capRatio",
+          "type": "uint256[]"
         }
       ],
       "name": "addAssets",
@@ -229,14 +233,19 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_underlyingPrice",
-          "type": "uint256"
+          "internalType": "uint256[]",
+          "name": "_underlyingPrices",
+          "type": "uint256[]"
         },
         {
-          "internalType": "uint256",
-          "name": "_index",
-          "type": "uint256"
+          "internalType": "uint256[]",
+          "name": "_indexes",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "_proofHashes",
+          "type": "bytes32[]"
         }
       ],
       "name": "addObservation",
@@ -266,19 +275,6 @@
     {
       "inputs": [],
       "name": "cardinality",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "epochInterval",
       "outputs": [
         {
           "internalType": "uint256",
@@ -336,36 +332,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getCustomMarkSma",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "priceCumulative",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_index",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_startTimestamp",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_endTimestamp",
-          "type": "uint256"
-        }
-      ],
-      "name": "getCustomUnderlyingSma",
+      "name": "getCustomIndexSma",
       "outputs": [
         {
           "internalType": "uint256",
@@ -383,6 +350,40 @@
         {
           "internalType": "uint256",
           "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_smInterval",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getIndexSma",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "volatilityTokenSma",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "iVolatilityTokenSma",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastUpdateTimestamp",
           "type": "uint256"
         }
       ],
@@ -421,25 +422,6 @@
           "type": "uint256"
         }
       ],
-      "name": "getLastMarkPrice",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "underlyingLastPrice",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_index",
-          "type": "uint256"
-        }
-      ],
       "name": "getLastPrice",
       "outputs": [
         {
@@ -455,12 +437,12 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_index",
+          "name": "_smInterval",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "_smInterval",
+          "name": "_index",
           "type": "uint256"
         }
       ],
@@ -497,30 +479,6 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_smInterval",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_index",
-          "type": "uint256"
-        }
-      ],
-      "name": "getMarkSma",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "priceCumulative",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "bytes32",
           "name": "role",
           "type": "bytes32"
@@ -540,6 +498,19 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        }
+      ],
+      "name": "grantInitialTimestampRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "role",
           "type": "bytes32"
@@ -551,19 +522,6 @@
         }
       ],
       "name": "grantRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_positioningConfig",
-          "type": "address"
-        }
-      ],
-      "name": "grantSmaIntervalRole",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -612,13 +570,42 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "indexOracle",
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "indexPriceAtEpochs",
       "outputs": [
         {
-          "internalType": "contract IIndexPriceOracle",
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "indexSmInterval",
+      "outputs": [
+        {
+          "internalType": "uint256",
           "name": "",
-          "type": "address"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -640,19 +627,29 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        },
+        {
           "internalType": "uint256[]",
-          "name": "_priceCumulative",
+          "name": "_volatilityPrices",
           "type": "uint256[]"
         },
         {
           "internalType": "address[]",
-          "name": "_asset",
+          "name": "_volatilityIndex",
           "type": "address[]"
         },
         {
-          "internalType": "address",
-          "name": "_admin",
-          "type": "address"
+          "internalType": "bytes32[]",
+          "name": "_proofHash",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "_capRatio",
+          "type": "uint256[]"
         }
       ],
       "name": "initialize",
@@ -664,38 +661,25 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "_smInterval",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "_index",
           "type": "uint256"
         }
       ],
-      "name": "markPriceAtEpochs",
+      "name": "latestRoundData",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "price",
+          "name": "answer",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "markSmInterval",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
+          "name": "lastUpdateTimestamp",
           "type": "uint256"
         }
       ],
@@ -728,22 +712,9 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "markPrice",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "positioning",
-      "outputs": [
-        {
-          "internalType": "contract IPositioning",
-          "name": "",
-          "type": "address"
+          "internalType": "bytes32",
+          "name": "proofHash",
+          "type": "bytes32"
         }
       ],
       "stateMutability": "view",
@@ -788,12 +759,12 @@
     {
       "inputs": [
         {
-          "internalType": "contract IIndexPriceOracle",
-          "name": "_indexOracle",
-          "type": "address"
+          "internalType": "uint256",
+          "name": "_smInterval",
+          "type": "uint256"
         }
       ],
-      "name": "setIndexOracle",
+      "name": "setIndexSmInterval",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -802,24 +773,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_epochInterval",
+          "name": "_timestamp",
           "type": "uint256"
         }
       ],
-      "name": "setMarkEpochInterval",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_markSmInterval",
-          "type": "uint256"
-        }
-      ],
-      "name": "setMarkSmInterval",
+      "name": "setInitialTimestamp",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -840,19 +798,6 @@
     {
       "inputs": [
         {
-          "internalType": "contract IPositioning",
-          "name": "_positioning",
-          "type": "address"
-        }
-      ],
-      "name": "setPositioning",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "bytes4",
           "name": "interfaceId",
           "type": "bytes4"
@@ -864,6 +809,25 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "volatilityCapRatioByIndex",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
