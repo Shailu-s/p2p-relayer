@@ -1,0 +1,72 @@
+syntax = "proto3";
+package chat;
+
+option go_package = "./";
+
+message Asset{
+  string virtualToken = 1;
+  string value = 2;
+}
+
+message Order {
+  string orderType = 1;     
+  uint64 deadline = 2;
+  string trader = 3;
+  Asset makeAsset = 4;
+  Asset takeAsset = 5;
+  string salt= 6;
+  string limitOrderTriggerPrice = 7;
+  bool isShort = 8;
+  string sign = 9;
+  string fills = 10;
+}
+
+message MessageData{
+  string clientVersion = 1; // client version
+  int64 timestamp = 2;     // unix time
+  bool gossip = 3;         // true to have receiver peer gossip the message to neighbors
+  bytes data = 4;
+  repeated string nodeId = 5;       // id of node that created the message (not the peer that may have sent it). =base58(multihash(nodePubKey))
+  repeated string nodeAddress = 6;    // Authoring node Secp256k1 public key (32bytes) - protobufs serielized
+  repeated bytes sign = 7;         // signature of message data + method specific data by message authoring node.
+  string chain = 8;              // chain name of message data
+}
+
+message TransactionMessage{
+  string transactionHash = 1;
+  repeated string orderID = 2;
+  int64 txID = 3;
+  string nextLeader = 4;
+  string nextPubKey = 5;
+  string error = 6;
+}
+
+message TransactionMessageMessageData{
+  MessageData messageData = 1;
+  TransactionMessage transactionMessage =2;
+}
+
+message OrderMessageData{
+  MessageData messageData = 1;
+  repeated Order orderMessageArray = 2;
+}
+
+// a protocol define a set of reuqest and responses
+message MatchedOrder {
+  Order order1 = 1;
+  Order order2 = 2;
+}
+
+// a protocol define a set of reuqest and responses
+message MatchedOrderMessageData {
+  MessageData messageData = 1;
+  repeated MatchedOrder matchedOrder = 2;
+}
+
+message GossipMessage {
+  oneof message {
+    MatchedOrderMessageData matchedOrder = 3;
+    TransactionMessageMessageData transactionMessage = 4;
+    OrderMessageData orderMessageData = 5;
+  }
+}

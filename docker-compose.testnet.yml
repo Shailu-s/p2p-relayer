@@ -1,0 +1,43 @@
+version: '2'
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+      POSTGRES_DB: postgres
+    volumes:
+       - postgres_data:/data/postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  perp-relayer:
+    build: .
+    depends_on:
+      - postgres
+    stdin_open: true
+    volumes:
+      - ./config-files:/config-files
+      - ./db:/app/db
+      - ./logs:/app/logs
+    ports:
+      - "80:8080"
+      - "10015:10015"
+    tty: true
+    restart: on-failure
+    environment:
+      - FILE_PATH=/config-files/
+      - FILE_NAME=config.json
+      # Enable go-libp2p logging (See 'go-log': https://github.com/ipfs/go-log)
+      - GOLOG_LOG_LEVEL=debug,dht=info
+      - GOLOG_FILE=/app/logs/relayer.log
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+volumes:
+  postgres_data:

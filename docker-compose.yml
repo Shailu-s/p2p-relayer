@@ -1,0 +1,63 @@
+version: '2'
+services:
+  perp-relayer-1:
+    build: .
+    stdin_open: true
+    volumes:
+      - ./config-files/config1.json:/app/config.json
+      - ./db/test1.db:/app/test1.db
+      - ./logs/relayer1.log:/app/logs/relayer.log
+    ports:
+      - "80:8080"
+    tty: true
+    networks:
+      relayers:
+        ipv4_address: 10.5.0.5
+    restart: on-failure
+    environment:
+      - FILE_PATH=.
+      - FILE_NAME=config.json
+
+  perp-relayer-2:
+    build: .
+    stdin_open: true
+    volumes:
+      - ./config-files/config2.json:/app/config.json
+      - ./db/test2.db:/app/test2.db
+      - ./logs/relayer2.log:/app/logs/relayer.log
+    ports:
+      - "8081:8080"
+    tty: true
+    networks:
+      relayers:
+        ipv4_address: 10.5.0.6
+    restart: on-failure
+    environment:
+      - FILE_PATH=.
+      - FILE_NAME=config.json
+
+  perp-relayer-3:
+    build: .
+    stdin_open: true
+    volumes:
+      - ./config-files/config3.json:/app/config.json
+      - ./db/test3.db:/app/test3.db
+      - ./logs/relayer3.log:/app/logs/relayer.log
+    ports:
+      - "8082:8080"
+    tty: true
+    networks:
+      relayers:
+        ipv4_address: 10.5.0.7
+    restart: on-failure
+    environment:
+      - FILE_PATH=.
+      - FILE_NAME=config.json
+
+networks:
+  relayers:
+      driver: bridge
+      ipam:
+        config:
+          - subnet: "10.5.0.0/16"
+            gateway: 10.5.0.1
