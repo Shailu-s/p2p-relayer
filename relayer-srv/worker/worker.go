@@ -608,6 +608,7 @@ func (w *Worker) GetMarkPrice(index *big.Int) (*big.Int, error) {
 
 func (w *Worker) GetIndexPrice(index *big.Int) (*big.Int, error) {
 	twInterval, _ := new(big.Int).SetString("28800", 10)
+	println(w.indexPriceOracle.String(), "=================address")
 	indexPriceOracle, _ := IndexPriceOracle.NewIndexPriceOracle(w.indexPriceOracle, w.client)
 	indexTwap, err := indexPriceOracle.GetLastTwap(getCallOpts(), twInterval, index)
 	return indexTwap, err

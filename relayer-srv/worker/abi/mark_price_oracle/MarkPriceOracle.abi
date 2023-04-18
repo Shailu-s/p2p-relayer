@@ -1,5 +1,4 @@
-
- [
+[
     {
       "anonymous": false,
       "inputs": [
@@ -198,7 +197,7 @@
     },
     {
       "inputs": [],
-      "name": "TWAP_INTERVAL_ROLE",
+      "name": "SMA_INTERVAL_ROLE",
       "outputs": [
         {
           "internalType": "bytes32",
@@ -220,11 +219,6 @@
           "internalType": "address[]",
           "name": "_asset",
           "type": "address[]"
-        },
-        {
-          "internalType": "bytes32[]",
-          "name": "_proofHash",
-          "type": "bytes32[]"
         }
       ],
       "name": "addAssets",
@@ -243,11 +237,6 @@
           "internalType": "uint256",
           "name": "_index",
           "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "_proofHash",
-          "type": "bytes32"
         }
       ],
       "name": "addObservation",
@@ -275,6 +264,61 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "cardinality",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "epochInterval",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epochTimestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "getCustomEpochPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -292,7 +336,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getCustomMarkTwap",
+      "name": "getCustomMarkSma",
       "outputs": [
         {
           "internalType": "uint256",
@@ -321,7 +365,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getCustomUnderlyingTwap",
+      "name": "getCustomUnderlyingSma",
       "outputs": [
         {
           "internalType": "uint256",
@@ -353,11 +397,78 @@
           "type": "uint256"
         }
       ],
+      "name": "getLastEpochPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLastMarkPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "underlyingLastPrice",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
       "name": "getLastPrice",
       "outputs": [
         {
           "internalType": "uint256",
           "name": "underlyingLastPrice",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_smInterval",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLastSma",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "priceCumulative",
           "type": "uint256"
         }
       ],
@@ -387,7 +498,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_twInterval",
+          "name": "_smInterval",
           "type": "uint256"
         },
         {
@@ -396,7 +507,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getMarkTwap",
+      "name": "getMarkSma",
       "outputs": [
         {
           "internalType": "uint256",
@@ -452,7 +563,7 @@
           "type": "address"
         }
       ],
-      "name": "grantTwapIntervalRole",
+      "name": "grantSmaIntervalRole",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -515,7 +626,7 @@
     },
     {
       "inputs": [],
-      "name": "indexTwInterval",
+      "name": "initialTimestamp",
       "outputs": [
         {
           "internalType": "uint256",
@@ -539,11 +650,6 @@
           "type": "address[]"
         },
         {
-          "internalType": "bytes32[]",
-          "name": "_proofHash",
-          "type": "bytes32[]"
-        },
-        {
           "internalType": "address",
           "name": "_admin",
           "type": "address"
@@ -555,8 +661,37 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "markPriceAtEpochs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
-      "name": "markTwInterval",
+      "name": "markSmInterval",
       "outputs": [
         {
           "internalType": "uint256",
@@ -591,11 +726,6 @@
           "internalType": "uint256",
           "name": "underlyingPrice",
           "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "proofHash",
-          "type": "bytes32"
         },
         {
           "internalType": "uint256",
@@ -672,11 +802,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_indexTwInterval",
+          "name": "_epochInterval",
           "type": "uint256"
         }
       ],
-      "name": "setIndexTwInterval",
+      "name": "setMarkEpochInterval",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -685,11 +815,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_markTwInterval",
+          "name": "_markSmInterval",
           "type": "uint256"
         }
       ],
-      "name": "setMarkTwInterval",
+      "name": "setMarkSmInterval",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

@@ -41,16 +41,16 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "uint256",
+          "indexed": false,
+          "internalType": "uint256[]",
           "name": "index",
-          "type": "uint256"
+          "type": "uint256[]"
         },
         {
           "indexed": false,
-          "internalType": "uint256",
+          "internalType": "uint256[]",
           "name": "underlyingPrice",
-          "type": "uint256"
+          "type": "uint256[]"
         },
         {
           "indexed": false,
@@ -178,6 +178,19 @@
     },
     {
       "inputs": [],
+      "name": "INITIAL_TIMESTAMP_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "PRICE_ORACLE_ADMIN",
       "outputs": [
         {
@@ -220,19 +233,19 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_underlyingPrice",
-          "type": "uint256"
+          "internalType": "uint256[]",
+          "name": "_underlyingPrices",
+          "type": "uint256[]"
         },
         {
-          "internalType": "uint256",
-          "name": "_index",
-          "type": "uint256"
+          "internalType": "uint256[]",
+          "name": "_indexes",
+          "type": "uint256[]"
         },
         {
-          "internalType": "bytes32",
-          "name": "_proofHash",
-          "type": "bytes32"
+          "internalType": "bytes32[]",
+          "name": "_proofHashes",
+          "type": "bytes32[]"
         }
       ],
       "name": "addObservation",
@@ -260,6 +273,48 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "cardinality",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epochTimestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "getCustomEpochPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -277,7 +332,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getCustomIndexTwap",
+      "name": "getCustomIndexSma",
       "outputs": [
         {
           "internalType": "uint256",
@@ -305,7 +360,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_twInterval",
+          "name": "_smInterval",
           "type": "uint256"
         },
         {
@@ -314,21 +369,45 @@
           "type": "uint256"
         }
       ],
-      "name": "getIndexTwap",
+      "name": "getIndexSma",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "volatilityTokenTwap",
+          "name": "volatilityTokenSma",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "iVolatilityTokenTwap",
+          "name": "iVolatilityTokenSma",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
           "name": "lastUpdateTimestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLastEpochPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
           "type": "uint256"
         }
       ],
@@ -358,7 +437,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_twInterval",
+          "name": "_smInterval",
           "type": "uint256"
         },
         {
@@ -367,7 +446,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getLastTwap",
+      "name": "getLastSma",
       "outputs": [
         {
           "internalType": "uint256",
@@ -414,6 +493,19 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        }
+      ],
+      "name": "grantInitialTimestampRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -480,6 +572,61 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "indexPriceAtEpochs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "indexSmInterval",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initialTimestamp",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "_admin",
           "type": "address"
@@ -514,7 +661,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_twInterval",
+          "name": "_smInterval",
           "type": "uint256"
         },
         {
@@ -605,6 +752,32 @@
         }
       ],
       "name": "revokeRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_smInterval",
+          "type": "uint256"
+        }
+      ],
+      "name": "setIndexSmInterval",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "setInitialTimestamp",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

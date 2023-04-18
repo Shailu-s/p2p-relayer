@@ -225,6 +225,7 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 	if err != nil {
 		logrus.Warn(err, "err in getting mark price")
 	}
+	println("=====================================prices", indexPrice.String(), markPrice.String())
 	for i := 0; i < len(buyPriorityList); i++ {
 
 		w.Logger.Infof("Working on buy order with price %f; trader: %s", buyPriorityList[i].Price, buyPriorityList[i].Trader)

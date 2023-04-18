@@ -31,7 +31,7 @@ var (
 
 // IndexPriceOracleMetaData contains all meta data concerning the IndexPriceOracle contract.
 var IndexPriceOracleMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"lastIndex\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"assets\",\"type\":\"address[]\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"underlyingPrices\",\"type\":\"uint256[]\"}],\"name\":\"AssetsAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"underlyingPrice\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"ObservationAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"matchingEngine\",\"type\":\"address\"}],\"name\":\"ObservationAdderSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ADD_OBSERVATION_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PRICE_ORACLE_ADMIN\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"_underlyingPrice\",\"type\":\"uint256[]\"},{\"internalType\":\"address[]\",\"name\":\"_asset\",\"type\":\"address[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"_proofHash\",\"type\":\"bytes32[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_capRatio\",\"type\":\"uint256[]\"}],\"name\":\"addAssets\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_underlyingPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_proofHash\",\"type\":\"bytes32\"}],\"name\":\"addObservation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"baseTokenByIndex\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_startTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_endTimestamp\",\"type\":\"uint256\"}],\"name\":\"getCustomIndexTwap\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"priceCumulative\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getIndexCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_twInterval\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getIndexTwap\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"volatilityTokenTwap\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"iVolatilityTokenTwap\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"underlyingLastPrice\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_twInterval\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastTwap\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"priceCumulative\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastUpdatedTimestamp\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"lastUpdatedTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"indexByBaseToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"uint256[]\",\"name\":\"_volatilityPrices\",\"type\":\"uint256[]\"},{\"internalType\":\"address[]\",\"name\":\"_volatilityIndex\",\"type\":\"address[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"_proofHash\",\"type\":\"bytes32[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_capRatio\",\"type\":\"uint256[]\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_twInterval\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"latestRoundData\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"answer\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"observationsByIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"underlyingPrice\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"proofHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_adder\",\"type\":\"address\"}],\"name\":\"setObservationAdder\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"volatilityCapRatioByIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"lastIndex\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"assets\",\"type\":\"address[]\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"underlyingPrices\",\"type\":\"uint256[]\"}],\"name\":\"AssetsAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"index\",\"type\":\"uint256[]\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"underlyingPrice\",\"type\":\"uint256[]\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"ObservationAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"matchingEngine\",\"type\":\"address\"}],\"name\":\"ObservationAdderSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ADD_OBSERVATION_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"INITIAL_TIMESTAMP_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PRICE_ORACLE_ADMIN\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"_underlyingPrice\",\"type\":\"uint256[]\"},{\"internalType\":\"address[]\",\"name\":\"_asset\",\"type\":\"address[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"_proofHash\",\"type\":\"bytes32[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_capRatio\",\"type\":\"uint256[]\"}],\"name\":\"addAssets\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"_underlyingPrices\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_indexes\",\"type\":\"uint256[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"_proofHashes\",\"type\":\"bytes32[]\"}],\"name\":\"addObservation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"baseTokenByIndex\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"cardinality\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_epochTimestamp\",\"type\":\"uint256\"}],\"name\":\"getCustomEpochPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_startTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_endTimestamp\",\"type\":\"uint256\"}],\"name\":\"getCustomIndexSma\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"priceCumulative\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getIndexCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_smInterval\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getIndexSma\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"volatilityTokenSma\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"iVolatilityTokenSma\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastEpochPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"underlyingLastPrice\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_smInterval\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastSma\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"priceCumulative\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getLastUpdatedTimestamp\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"lastUpdatedTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_account\",\"type\":\"address\"}],\"name\":\"grantInitialTimestampRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"indexByBaseToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"indexPriceAtEpochs\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"indexSmInterval\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"initialTimestamp\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"uint256[]\",\"name\":\"_volatilityPrices\",\"type\":\"uint256[]\"},{\"internalType\":\"address[]\",\"name\":\"_volatilityIndex\",\"type\":\"address[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"_proofHash\",\"type\":\"bytes32[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_capRatio\",\"type\":\"uint256[]\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_smInterval\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"latestRoundData\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"answer\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"observationsByIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"underlyingPrice\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"proofHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_smInterval\",\"type\":\"uint256\"}],\"name\":\"setIndexSmInterval\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_timestamp\",\"type\":\"uint256\"}],\"name\":\"setInitialTimestamp\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_adder\",\"type\":\"address\"}],\"name\":\"setObservationAdder\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"volatilityCapRatioByIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // IndexPriceOracleABI is the input ABI used to generate the binding from.
@@ -242,6 +242,37 @@ func (_IndexPriceOracle *IndexPriceOracleCallerSession) DEFAULTADMINROLE() ([32]
 	return _IndexPriceOracle.Contract.DEFAULTADMINROLE(&_IndexPriceOracle.CallOpts)
 }
 
+// INITIALTIMESTAMPROLE is a free data retrieval call binding the contract method 0x304e8491.
+//
+// Solidity: function INITIAL_TIMESTAMP_ROLE() view returns(bytes32)
+func (_IndexPriceOracle *IndexPriceOracleCaller) INITIALTIMESTAMPROLE(opts *bind.CallOpts) ([32]byte, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "INITIAL_TIMESTAMP_ROLE")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// INITIALTIMESTAMPROLE is a free data retrieval call binding the contract method 0x304e8491.
+//
+// Solidity: function INITIAL_TIMESTAMP_ROLE() view returns(bytes32)
+func (_IndexPriceOracle *IndexPriceOracleSession) INITIALTIMESTAMPROLE() ([32]byte, error) {
+	return _IndexPriceOracle.Contract.INITIALTIMESTAMPROLE(&_IndexPriceOracle.CallOpts)
+}
+
+// INITIALTIMESTAMPROLE is a free data retrieval call binding the contract method 0x304e8491.
+//
+// Solidity: function INITIAL_TIMESTAMP_ROLE() view returns(bytes32)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) INITIALTIMESTAMPROLE() ([32]byte, error) {
+	return _IndexPriceOracle.Contract.INITIALTIMESTAMPROLE(&_IndexPriceOracle.CallOpts)
+}
+
 // PRICEORACLEADMIN is a free data retrieval call binding the contract method 0xa1f68193.
 //
 // Solidity: function PRICE_ORACLE_ADMIN() view returns(bytes32)
@@ -304,12 +335,12 @@ func (_IndexPriceOracle *IndexPriceOracleCallerSession) BaseTokenByIndex(arg0 *b
 	return _IndexPriceOracle.Contract.BaseTokenByIndex(&_IndexPriceOracle.CallOpts, arg0)
 }
 
-// GetCustomIndexTwap is a free data retrieval call binding the contract method 0x87314b7c.
+// Cardinality is a free data retrieval call binding the contract method 0xdbffe9ad.
 //
-// Solidity: function getCustomIndexTwap(uint256 _index, uint256 _startTimestamp, uint256 _endTimestamp) view returns(uint256 priceCumulative)
-func (_IndexPriceOracle *IndexPriceOracleCaller) GetCustomIndexTwap(opts *bind.CallOpts, _index *big.Int, _startTimestamp *big.Int, _endTimestamp *big.Int) (*big.Int, error) {
+// Solidity: function cardinality() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleCaller) Cardinality(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _IndexPriceOracle.contract.Call(opts, &out, "getCustomIndexTwap", _index, _startTimestamp, _endTimestamp)
+	err := _IndexPriceOracle.contract.Call(opts, &out, "cardinality")
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -321,18 +352,94 @@ func (_IndexPriceOracle *IndexPriceOracleCaller) GetCustomIndexTwap(opts *bind.C
 
 }
 
-// GetCustomIndexTwap is a free data retrieval call binding the contract method 0x87314b7c.
+// Cardinality is a free data retrieval call binding the contract method 0xdbffe9ad.
 //
-// Solidity: function getCustomIndexTwap(uint256 _index, uint256 _startTimestamp, uint256 _endTimestamp) view returns(uint256 priceCumulative)
-func (_IndexPriceOracle *IndexPriceOracleSession) GetCustomIndexTwap(_index *big.Int, _startTimestamp *big.Int, _endTimestamp *big.Int) (*big.Int, error) {
-	return _IndexPriceOracle.Contract.GetCustomIndexTwap(&_IndexPriceOracle.CallOpts, _index, _startTimestamp, _endTimestamp)
+// Solidity: function cardinality() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleSession) Cardinality() (*big.Int, error) {
+	return _IndexPriceOracle.Contract.Cardinality(&_IndexPriceOracle.CallOpts)
 }
 
-// GetCustomIndexTwap is a free data retrieval call binding the contract method 0x87314b7c.
+// Cardinality is a free data retrieval call binding the contract method 0xdbffe9ad.
 //
-// Solidity: function getCustomIndexTwap(uint256 _index, uint256 _startTimestamp, uint256 _endTimestamp) view returns(uint256 priceCumulative)
-func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetCustomIndexTwap(_index *big.Int, _startTimestamp *big.Int, _endTimestamp *big.Int) (*big.Int, error) {
-	return _IndexPriceOracle.Contract.GetCustomIndexTwap(&_IndexPriceOracle.CallOpts, _index, _startTimestamp, _endTimestamp)
+// Solidity: function cardinality() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) Cardinality() (*big.Int, error) {
+	return _IndexPriceOracle.Contract.Cardinality(&_IndexPriceOracle.CallOpts)
+}
+
+// GetCustomEpochPrice is a free data retrieval call binding the contract method 0xa819f650.
+//
+// Solidity: function getCustomEpochPrice(uint256 _index, uint256 _epochTimestamp) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleCaller) GetCustomEpochPrice(opts *bind.CallOpts, _index *big.Int, _epochTimestamp *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "getCustomEpochPrice", _index, _epochTimestamp)
+
+	outstruct := new(struct {
+		Price     *big.Int
+		Timestamp *big.Int
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Price = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.Timestamp = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
+}
+
+// GetCustomEpochPrice is a free data retrieval call binding the contract method 0xa819f650.
+//
+// Solidity: function getCustomEpochPrice(uint256 _index, uint256 _epochTimestamp) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleSession) GetCustomEpochPrice(_index *big.Int, _epochTimestamp *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	return _IndexPriceOracle.Contract.GetCustomEpochPrice(&_IndexPriceOracle.CallOpts, _index, _epochTimestamp)
+}
+
+// GetCustomEpochPrice is a free data retrieval call binding the contract method 0xa819f650.
+//
+// Solidity: function getCustomEpochPrice(uint256 _index, uint256 _epochTimestamp) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetCustomEpochPrice(_index *big.Int, _epochTimestamp *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	return _IndexPriceOracle.Contract.GetCustomEpochPrice(&_IndexPriceOracle.CallOpts, _index, _epochTimestamp)
+}
+
+// GetCustomIndexSma is a free data retrieval call binding the contract method 0x447f18ee.
+//
+// Solidity: function getCustomIndexSma(uint256 _index, uint256 _startTimestamp, uint256 _endTimestamp) view returns(uint256 priceCumulative)
+func (_IndexPriceOracle *IndexPriceOracleCaller) GetCustomIndexSma(opts *bind.CallOpts, _index *big.Int, _startTimestamp *big.Int, _endTimestamp *big.Int) (*big.Int, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "getCustomIndexSma", _index, _startTimestamp, _endTimestamp)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetCustomIndexSma is a free data retrieval call binding the contract method 0x447f18ee.
+//
+// Solidity: function getCustomIndexSma(uint256 _index, uint256 _startTimestamp, uint256 _endTimestamp) view returns(uint256 priceCumulative)
+func (_IndexPriceOracle *IndexPriceOracleSession) GetCustomIndexSma(_index *big.Int, _startTimestamp *big.Int, _endTimestamp *big.Int) (*big.Int, error) {
+	return _IndexPriceOracle.Contract.GetCustomIndexSma(&_IndexPriceOracle.CallOpts, _index, _startTimestamp, _endTimestamp)
+}
+
+// GetCustomIndexSma is a free data retrieval call binding the contract method 0x447f18ee.
+//
+// Solidity: function getCustomIndexSma(uint256 _index, uint256 _startTimestamp, uint256 _endTimestamp) view returns(uint256 priceCumulative)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetCustomIndexSma(_index *big.Int, _startTimestamp *big.Int, _endTimestamp *big.Int) (*big.Int, error) {
+	return _IndexPriceOracle.Contract.GetCustomIndexSma(&_IndexPriceOracle.CallOpts, _index, _startTimestamp, _endTimestamp)
 }
 
 // GetIndexCount is a free data retrieval call binding the contract method 0xec244370.
@@ -366,54 +473,99 @@ func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetIndexCount() (*big.In
 	return _IndexPriceOracle.Contract.GetIndexCount(&_IndexPriceOracle.CallOpts)
 }
 
-// GetIndexTwap is a free data retrieval call binding the contract method 0x5ec60c84.
+// GetIndexSma is a free data retrieval call binding the contract method 0xc3b621b9.
 //
-// Solidity: function getIndexTwap(uint256 _twInterval, uint256 _index) view returns(uint256 volatilityTokenTwap, uint256 iVolatilityTokenTwap, uint256 lastUpdateTimestamp)
-func (_IndexPriceOracle *IndexPriceOracleCaller) GetIndexTwap(opts *bind.CallOpts, _twInterval *big.Int, _index *big.Int) (struct {
-	VolatilityTokenTwap  *big.Int
-	IVolatilityTokenTwap *big.Int
-	LastUpdateTimestamp  *big.Int
+// Solidity: function getIndexSma(uint256 _smInterval, uint256 _index) view returns(uint256 volatilityTokenSma, uint256 iVolatilityTokenSma, uint256 lastUpdateTimestamp)
+func (_IndexPriceOracle *IndexPriceOracleCaller) GetIndexSma(opts *bind.CallOpts, _smInterval *big.Int, _index *big.Int) (struct {
+	VolatilityTokenSma  *big.Int
+	IVolatilityTokenSma *big.Int
+	LastUpdateTimestamp *big.Int
 }, error) {
 	var out []interface{}
-	err := _IndexPriceOracle.contract.Call(opts, &out, "getIndexTwap", _twInterval, _index)
+	err := _IndexPriceOracle.contract.Call(opts, &out, "getIndexSma", _smInterval, _index)
 
 	outstruct := new(struct {
-		VolatilityTokenTwap  *big.Int
-		IVolatilityTokenTwap *big.Int
-		LastUpdateTimestamp  *big.Int
+		VolatilityTokenSma  *big.Int
+		IVolatilityTokenSma *big.Int
+		LastUpdateTimestamp *big.Int
 	})
 	if err != nil {
 		return *outstruct, err
 	}
 
-	outstruct.VolatilityTokenTwap = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-	outstruct.IVolatilityTokenTwap = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+	outstruct.VolatilityTokenSma = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.IVolatilityTokenSma = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
 	outstruct.LastUpdateTimestamp = *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
 
 	return *outstruct, err
 
 }
 
-// GetIndexTwap is a free data retrieval call binding the contract method 0x5ec60c84.
+// GetIndexSma is a free data retrieval call binding the contract method 0xc3b621b9.
 //
-// Solidity: function getIndexTwap(uint256 _twInterval, uint256 _index) view returns(uint256 volatilityTokenTwap, uint256 iVolatilityTokenTwap, uint256 lastUpdateTimestamp)
-func (_IndexPriceOracle *IndexPriceOracleSession) GetIndexTwap(_twInterval *big.Int, _index *big.Int) (struct {
-	VolatilityTokenTwap  *big.Int
-	IVolatilityTokenTwap *big.Int
-	LastUpdateTimestamp  *big.Int
+// Solidity: function getIndexSma(uint256 _smInterval, uint256 _index) view returns(uint256 volatilityTokenSma, uint256 iVolatilityTokenSma, uint256 lastUpdateTimestamp)
+func (_IndexPriceOracle *IndexPriceOracleSession) GetIndexSma(_smInterval *big.Int, _index *big.Int) (struct {
+	VolatilityTokenSma  *big.Int
+	IVolatilityTokenSma *big.Int
+	LastUpdateTimestamp *big.Int
 }, error) {
-	return _IndexPriceOracle.Contract.GetIndexTwap(&_IndexPriceOracle.CallOpts, _twInterval, _index)
+	return _IndexPriceOracle.Contract.GetIndexSma(&_IndexPriceOracle.CallOpts, _smInterval, _index)
 }
 
-// GetIndexTwap is a free data retrieval call binding the contract method 0x5ec60c84.
+// GetIndexSma is a free data retrieval call binding the contract method 0xc3b621b9.
 //
-// Solidity: function getIndexTwap(uint256 _twInterval, uint256 _index) view returns(uint256 volatilityTokenTwap, uint256 iVolatilityTokenTwap, uint256 lastUpdateTimestamp)
-func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetIndexTwap(_twInterval *big.Int, _index *big.Int) (struct {
-	VolatilityTokenTwap  *big.Int
-	IVolatilityTokenTwap *big.Int
-	LastUpdateTimestamp  *big.Int
+// Solidity: function getIndexSma(uint256 _smInterval, uint256 _index) view returns(uint256 volatilityTokenSma, uint256 iVolatilityTokenSma, uint256 lastUpdateTimestamp)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetIndexSma(_smInterval *big.Int, _index *big.Int) (struct {
+	VolatilityTokenSma  *big.Int
+	IVolatilityTokenSma *big.Int
+	LastUpdateTimestamp *big.Int
 }, error) {
-	return _IndexPriceOracle.Contract.GetIndexTwap(&_IndexPriceOracle.CallOpts, _twInterval, _index)
+	return _IndexPriceOracle.Contract.GetIndexSma(&_IndexPriceOracle.CallOpts, _smInterval, _index)
+}
+
+// GetLastEpochPrice is a free data retrieval call binding the contract method 0x217b14d9.
+//
+// Solidity: function getLastEpochPrice(uint256 _index) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleCaller) GetLastEpochPrice(opts *bind.CallOpts, _index *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "getLastEpochPrice", _index)
+
+	outstruct := new(struct {
+		Price     *big.Int
+		Timestamp *big.Int
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Price = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.Timestamp = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
+}
+
+// GetLastEpochPrice is a free data retrieval call binding the contract method 0x217b14d9.
+//
+// Solidity: function getLastEpochPrice(uint256 _index) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleSession) GetLastEpochPrice(_index *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	return _IndexPriceOracle.Contract.GetLastEpochPrice(&_IndexPriceOracle.CallOpts, _index)
+}
+
+// GetLastEpochPrice is a free data retrieval call binding the contract method 0x217b14d9.
+//
+// Solidity: function getLastEpochPrice(uint256 _index) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetLastEpochPrice(_index *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	return _IndexPriceOracle.Contract.GetLastEpochPrice(&_IndexPriceOracle.CallOpts, _index)
 }
 
 // GetLastPrice is a free data retrieval call binding the contract method 0x65fa2f7f.
@@ -447,12 +599,12 @@ func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetLastPrice(_index *big
 	return _IndexPriceOracle.Contract.GetLastPrice(&_IndexPriceOracle.CallOpts, _index)
 }
 
-// GetLastTwap is a free data retrieval call binding the contract method 0x9a1dc9cc.
+// GetLastSma is a free data retrieval call binding the contract method 0xed63b347.
 //
-// Solidity: function getLastTwap(uint256 _twInterval, uint256 _index) view returns(uint256 priceCumulative)
-func (_IndexPriceOracle *IndexPriceOracleCaller) GetLastTwap(opts *bind.CallOpts, _twInterval *big.Int, _index *big.Int) (*big.Int, error) {
+// Solidity: function getLastSma(uint256 _smInterval, uint256 _index) view returns(uint256 priceCumulative)
+func (_IndexPriceOracle *IndexPriceOracleCaller) GetLastSma(opts *bind.CallOpts, _smInterval *big.Int, _index *big.Int) (*big.Int, error) {
 	var out []interface{}
-	err := _IndexPriceOracle.contract.Call(opts, &out, "getLastTwap", _twInterval, _index)
+	err := _IndexPriceOracle.contract.Call(opts, &out, "getLastSma", _smInterval, _index)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -464,18 +616,18 @@ func (_IndexPriceOracle *IndexPriceOracleCaller) GetLastTwap(opts *bind.CallOpts
 
 }
 
-// GetLastTwap is a free data retrieval call binding the contract method 0x9a1dc9cc.
+// GetLastSma is a free data retrieval call binding the contract method 0xed63b347.
 //
-// Solidity: function getLastTwap(uint256 _twInterval, uint256 _index) view returns(uint256 priceCumulative)
-func (_IndexPriceOracle *IndexPriceOracleSession) GetLastTwap(_twInterval *big.Int, _index *big.Int) (*big.Int, error) {
-	return _IndexPriceOracle.Contract.GetLastTwap(&_IndexPriceOracle.CallOpts, _twInterval, _index)
+// Solidity: function getLastSma(uint256 _smInterval, uint256 _index) view returns(uint256 priceCumulative)
+func (_IndexPriceOracle *IndexPriceOracleSession) GetLastSma(_smInterval *big.Int, _index *big.Int) (*big.Int, error) {
+	return _IndexPriceOracle.Contract.GetLastSma(&_IndexPriceOracle.CallOpts, _smInterval, _index)
 }
 
-// GetLastTwap is a free data retrieval call binding the contract method 0x9a1dc9cc.
+// GetLastSma is a free data retrieval call binding the contract method 0xed63b347.
 //
-// Solidity: function getLastTwap(uint256 _twInterval, uint256 _index) view returns(uint256 priceCumulative)
-func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetLastTwap(_twInterval *big.Int, _index *big.Int) (*big.Int, error) {
-	return _IndexPriceOracle.Contract.GetLastTwap(&_IndexPriceOracle.CallOpts, _twInterval, _index)
+// Solidity: function getLastSma(uint256 _smInterval, uint256 _index) view returns(uint256 priceCumulative)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) GetLastSma(_smInterval *big.Int, _index *big.Int) (*big.Int, error) {
+	return _IndexPriceOracle.Contract.GetLastSma(&_IndexPriceOracle.CallOpts, _smInterval, _index)
 }
 
 // GetLastUpdatedTimestamp is a free data retrieval call binding the contract method 0xa367c24d.
@@ -602,15 +754,122 @@ func (_IndexPriceOracle *IndexPriceOracleCallerSession) IndexByBaseToken(arg0 co
 	return _IndexPriceOracle.Contract.IndexByBaseToken(&_IndexPriceOracle.CallOpts, arg0)
 }
 
+// IndexPriceAtEpochs is a free data retrieval call binding the contract method 0xfb7566c5.
+//
+// Solidity: function indexPriceAtEpochs(uint256 , uint256 ) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleCaller) IndexPriceAtEpochs(opts *bind.CallOpts, arg0 *big.Int, arg1 *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "indexPriceAtEpochs", arg0, arg1)
+
+	outstruct := new(struct {
+		Price     *big.Int
+		Timestamp *big.Int
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Price = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.Timestamp = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
+}
+
+// IndexPriceAtEpochs is a free data retrieval call binding the contract method 0xfb7566c5.
+//
+// Solidity: function indexPriceAtEpochs(uint256 , uint256 ) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleSession) IndexPriceAtEpochs(arg0 *big.Int, arg1 *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	return _IndexPriceOracle.Contract.IndexPriceAtEpochs(&_IndexPriceOracle.CallOpts, arg0, arg1)
+}
+
+// IndexPriceAtEpochs is a free data retrieval call binding the contract method 0xfb7566c5.
+//
+// Solidity: function indexPriceAtEpochs(uint256 , uint256 ) view returns(uint256 price, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) IndexPriceAtEpochs(arg0 *big.Int, arg1 *big.Int) (struct {
+	Price     *big.Int
+	Timestamp *big.Int
+}, error) {
+	return _IndexPriceOracle.Contract.IndexPriceAtEpochs(&_IndexPriceOracle.CallOpts, arg0, arg1)
+}
+
+// IndexSmInterval is a free data retrieval call binding the contract method 0xab57dfa5.
+//
+// Solidity: function indexSmInterval() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleCaller) IndexSmInterval(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "indexSmInterval")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// IndexSmInterval is a free data retrieval call binding the contract method 0xab57dfa5.
+//
+// Solidity: function indexSmInterval() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleSession) IndexSmInterval() (*big.Int, error) {
+	return _IndexPriceOracle.Contract.IndexSmInterval(&_IndexPriceOracle.CallOpts)
+}
+
+// IndexSmInterval is a free data retrieval call binding the contract method 0xab57dfa5.
+//
+// Solidity: function indexSmInterval() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) IndexSmInterval() (*big.Int, error) {
+	return _IndexPriceOracle.Contract.IndexSmInterval(&_IndexPriceOracle.CallOpts)
+}
+
+// InitialTimestamp is a free data retrieval call binding the contract method 0xd6d14171.
+//
+// Solidity: function initialTimestamp() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleCaller) InitialTimestamp(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _IndexPriceOracle.contract.Call(opts, &out, "initialTimestamp")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// InitialTimestamp is a free data retrieval call binding the contract method 0xd6d14171.
+//
+// Solidity: function initialTimestamp() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleSession) InitialTimestamp() (*big.Int, error) {
+	return _IndexPriceOracle.Contract.InitialTimestamp(&_IndexPriceOracle.CallOpts)
+}
+
+// InitialTimestamp is a free data retrieval call binding the contract method 0xd6d14171.
+//
+// Solidity: function initialTimestamp() view returns(uint256)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) InitialTimestamp() (*big.Int, error) {
+	return _IndexPriceOracle.Contract.InitialTimestamp(&_IndexPriceOracle.CallOpts)
+}
+
 // LatestRoundData is a free data retrieval call binding the contract method 0xca92f873.
 //
-// Solidity: function latestRoundData(uint256 _twInterval, uint256 _index) view returns(uint256 answer, uint256 lastUpdateTimestamp)
-func (_IndexPriceOracle *IndexPriceOracleCaller) LatestRoundData(opts *bind.CallOpts, _twInterval *big.Int, _index *big.Int) (struct {
+// Solidity: function latestRoundData(uint256 _smInterval, uint256 _index) view returns(uint256 answer, uint256 lastUpdateTimestamp)
+func (_IndexPriceOracle *IndexPriceOracleCaller) LatestRoundData(opts *bind.CallOpts, _smInterval *big.Int, _index *big.Int) (struct {
 	Answer              *big.Int
 	LastUpdateTimestamp *big.Int
 }, error) {
 	var out []interface{}
-	err := _IndexPriceOracle.contract.Call(opts, &out, "latestRoundData", _twInterval, _index)
+	err := _IndexPriceOracle.contract.Call(opts, &out, "latestRoundData", _smInterval, _index)
 
 	outstruct := new(struct {
 		Answer              *big.Int
@@ -629,22 +888,22 @@ func (_IndexPriceOracle *IndexPriceOracleCaller) LatestRoundData(opts *bind.Call
 
 // LatestRoundData is a free data retrieval call binding the contract method 0xca92f873.
 //
-// Solidity: function latestRoundData(uint256 _twInterval, uint256 _index) view returns(uint256 answer, uint256 lastUpdateTimestamp)
-func (_IndexPriceOracle *IndexPriceOracleSession) LatestRoundData(_twInterval *big.Int, _index *big.Int) (struct {
+// Solidity: function latestRoundData(uint256 _smInterval, uint256 _index) view returns(uint256 answer, uint256 lastUpdateTimestamp)
+func (_IndexPriceOracle *IndexPriceOracleSession) LatestRoundData(_smInterval *big.Int, _index *big.Int) (struct {
 	Answer              *big.Int
 	LastUpdateTimestamp *big.Int
 }, error) {
-	return _IndexPriceOracle.Contract.LatestRoundData(&_IndexPriceOracle.CallOpts, _twInterval, _index)
+	return _IndexPriceOracle.Contract.LatestRoundData(&_IndexPriceOracle.CallOpts, _smInterval, _index)
 }
 
 // LatestRoundData is a free data retrieval call binding the contract method 0xca92f873.
 //
-// Solidity: function latestRoundData(uint256 _twInterval, uint256 _index) view returns(uint256 answer, uint256 lastUpdateTimestamp)
-func (_IndexPriceOracle *IndexPriceOracleCallerSession) LatestRoundData(_twInterval *big.Int, _index *big.Int) (struct {
+// Solidity: function latestRoundData(uint256 _smInterval, uint256 _index) view returns(uint256 answer, uint256 lastUpdateTimestamp)
+func (_IndexPriceOracle *IndexPriceOracleCallerSession) LatestRoundData(_smInterval *big.Int, _index *big.Int) (struct {
 	Answer              *big.Int
 	LastUpdateTimestamp *big.Int
 }, error) {
-	return _IndexPriceOracle.Contract.LatestRoundData(&_IndexPriceOracle.CallOpts, _twInterval, _index)
+	return _IndexPriceOracle.Contract.LatestRoundData(&_IndexPriceOracle.CallOpts, _smInterval, _index)
 }
 
 // ObservationsByIndex is a free data retrieval call binding the contract method 0x80319d88.
@@ -780,25 +1039,46 @@ func (_IndexPriceOracle *IndexPriceOracleTransactorSession) AddAssets(_underlyin
 	return _IndexPriceOracle.Contract.AddAssets(&_IndexPriceOracle.TransactOpts, _underlyingPrice, _asset, _proofHash, _capRatio)
 }
 
-// AddObservation is a paid mutator transaction binding the contract method 0xa8c81560.
+// AddObservation is a paid mutator transaction binding the contract method 0x1acb349b.
 //
-// Solidity: function addObservation(uint256 _underlyingPrice, uint256 _index, bytes32 _proofHash) returns()
-func (_IndexPriceOracle *IndexPriceOracleTransactor) AddObservation(opts *bind.TransactOpts, _underlyingPrice *big.Int, _index *big.Int, _proofHash [32]byte) (*types.Transaction, error) {
-	return _IndexPriceOracle.contract.Transact(opts, "addObservation", _underlyingPrice, _index, _proofHash)
+// Solidity: function addObservation(uint256[] _underlyingPrices, uint256[] _indexes, bytes32[] _proofHashes) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactor) AddObservation(opts *bind.TransactOpts, _underlyingPrices []*big.Int, _indexes []*big.Int, _proofHashes [][32]byte) (*types.Transaction, error) {
+	return _IndexPriceOracle.contract.Transact(opts, "addObservation", _underlyingPrices, _indexes, _proofHashes)
 }
 
-// AddObservation is a paid mutator transaction binding the contract method 0xa8c81560.
+// AddObservation is a paid mutator transaction binding the contract method 0x1acb349b.
 //
-// Solidity: function addObservation(uint256 _underlyingPrice, uint256 _index, bytes32 _proofHash) returns()
-func (_IndexPriceOracle *IndexPriceOracleSession) AddObservation(_underlyingPrice *big.Int, _index *big.Int, _proofHash [32]byte) (*types.Transaction, error) {
-	return _IndexPriceOracle.Contract.AddObservation(&_IndexPriceOracle.TransactOpts, _underlyingPrice, _index, _proofHash)
+// Solidity: function addObservation(uint256[] _underlyingPrices, uint256[] _indexes, bytes32[] _proofHashes) returns()
+func (_IndexPriceOracle *IndexPriceOracleSession) AddObservation(_underlyingPrices []*big.Int, _indexes []*big.Int, _proofHashes [][32]byte) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.AddObservation(&_IndexPriceOracle.TransactOpts, _underlyingPrices, _indexes, _proofHashes)
 }
 
-// AddObservation is a paid mutator transaction binding the contract method 0xa8c81560.
+// AddObservation is a paid mutator transaction binding the contract method 0x1acb349b.
 //
-// Solidity: function addObservation(uint256 _underlyingPrice, uint256 _index, bytes32 _proofHash) returns()
-func (_IndexPriceOracle *IndexPriceOracleTransactorSession) AddObservation(_underlyingPrice *big.Int, _index *big.Int, _proofHash [32]byte) (*types.Transaction, error) {
-	return _IndexPriceOracle.Contract.AddObservation(&_IndexPriceOracle.TransactOpts, _underlyingPrice, _index, _proofHash)
+// Solidity: function addObservation(uint256[] _underlyingPrices, uint256[] _indexes, bytes32[] _proofHashes) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactorSession) AddObservation(_underlyingPrices []*big.Int, _indexes []*big.Int, _proofHashes [][32]byte) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.AddObservation(&_IndexPriceOracle.TransactOpts, _underlyingPrices, _indexes, _proofHashes)
+}
+
+// GrantInitialTimestampRole is a paid mutator transaction binding the contract method 0x9fadf603.
+//
+// Solidity: function grantInitialTimestampRole(address _account) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactor) GrantInitialTimestampRole(opts *bind.TransactOpts, _account common.Address) (*types.Transaction, error) {
+	return _IndexPriceOracle.contract.Transact(opts, "grantInitialTimestampRole", _account)
+}
+
+// GrantInitialTimestampRole is a paid mutator transaction binding the contract method 0x9fadf603.
+//
+// Solidity: function grantInitialTimestampRole(address _account) returns()
+func (_IndexPriceOracle *IndexPriceOracleSession) GrantInitialTimestampRole(_account common.Address) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.GrantInitialTimestampRole(&_IndexPriceOracle.TransactOpts, _account)
+}
+
+// GrantInitialTimestampRole is a paid mutator transaction binding the contract method 0x9fadf603.
+//
+// Solidity: function grantInitialTimestampRole(address _account) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactorSession) GrantInitialTimestampRole(_account common.Address) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.GrantInitialTimestampRole(&_IndexPriceOracle.TransactOpts, _account)
 }
 
 // GrantRole is a paid mutator transaction binding the contract method 0x2f2ff15d.
@@ -883,6 +1163,48 @@ func (_IndexPriceOracle *IndexPriceOracleSession) RevokeRole(role [32]byte, acco
 // Solidity: function revokeRole(bytes32 role, address account) returns()
 func (_IndexPriceOracle *IndexPriceOracleTransactorSession) RevokeRole(role [32]byte, account common.Address) (*types.Transaction, error) {
 	return _IndexPriceOracle.Contract.RevokeRole(&_IndexPriceOracle.TransactOpts, role, account)
+}
+
+// SetIndexSmInterval is a paid mutator transaction binding the contract method 0xfe4ab28a.
+//
+// Solidity: function setIndexSmInterval(uint256 _smInterval) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactor) SetIndexSmInterval(opts *bind.TransactOpts, _smInterval *big.Int) (*types.Transaction, error) {
+	return _IndexPriceOracle.contract.Transact(opts, "setIndexSmInterval", _smInterval)
+}
+
+// SetIndexSmInterval is a paid mutator transaction binding the contract method 0xfe4ab28a.
+//
+// Solidity: function setIndexSmInterval(uint256 _smInterval) returns()
+func (_IndexPriceOracle *IndexPriceOracleSession) SetIndexSmInterval(_smInterval *big.Int) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.SetIndexSmInterval(&_IndexPriceOracle.TransactOpts, _smInterval)
+}
+
+// SetIndexSmInterval is a paid mutator transaction binding the contract method 0xfe4ab28a.
+//
+// Solidity: function setIndexSmInterval(uint256 _smInterval) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactorSession) SetIndexSmInterval(_smInterval *big.Int) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.SetIndexSmInterval(&_IndexPriceOracle.TransactOpts, _smInterval)
+}
+
+// SetInitialTimestamp is a paid mutator transaction binding the contract method 0x21f926db.
+//
+// Solidity: function setInitialTimestamp(uint256 _timestamp) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactor) SetInitialTimestamp(opts *bind.TransactOpts, _timestamp *big.Int) (*types.Transaction, error) {
+	return _IndexPriceOracle.contract.Transact(opts, "setInitialTimestamp", _timestamp)
+}
+
+// SetInitialTimestamp is a paid mutator transaction binding the contract method 0x21f926db.
+//
+// Solidity: function setInitialTimestamp(uint256 _timestamp) returns()
+func (_IndexPriceOracle *IndexPriceOracleSession) SetInitialTimestamp(_timestamp *big.Int) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.SetInitialTimestamp(&_IndexPriceOracle.TransactOpts, _timestamp)
+}
+
+// SetInitialTimestamp is a paid mutator transaction binding the contract method 0x21f926db.
+//
+// Solidity: function setInitialTimestamp(uint256 _timestamp) returns()
+func (_IndexPriceOracle *IndexPriceOracleTransactorSession) SetInitialTimestamp(_timestamp *big.Int) (*types.Transaction, error) {
+	return _IndexPriceOracle.Contract.SetInitialTimestamp(&_IndexPriceOracle.TransactOpts, _timestamp)
 }
 
 // SetObservationAdder is a paid mutator transaction binding the contract method 0x7b72a641.
@@ -1255,40 +1577,30 @@ func (it *IndexPriceOracleObservationAddedIterator) Close() error {
 
 // IndexPriceOracleObservationAdded represents a ObservationAdded event raised by the IndexPriceOracle contract.
 type IndexPriceOracleObservationAdded struct {
-	Index           *big.Int
-	UnderlyingPrice *big.Int
+	Index           []*big.Int
+	UnderlyingPrice []*big.Int
 	Timestamp       *big.Int
 	Raw             types.Log // Blockchain specific contextual infos
 }
 
-// FilterObservationAdded is a free log retrieval operation binding the contract event 0x08313f3d7056ea623777211724a29bff62d68075e812cfaccb0b6a02fafdcc68.
+// FilterObservationAdded is a free log retrieval operation binding the contract event 0x30ff7507500c6f8ce27c81a024f60f8d17c748cf31e268a17d9f1d3af70ec996.
 //
-// Solidity: event ObservationAdded(uint256 indexed index, uint256 underlyingPrice, uint256 timestamp)
-func (_IndexPriceOracle *IndexPriceOracleFilterer) FilterObservationAdded(opts *bind.FilterOpts, index []*big.Int) (*IndexPriceOracleObservationAddedIterator, error) {
+// Solidity: event ObservationAdded(uint256[] index, uint256[] underlyingPrice, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleFilterer) FilterObservationAdded(opts *bind.FilterOpts) (*IndexPriceOracleObservationAddedIterator, error) {
 
-	var indexRule []interface{}
-	for _, indexItem := range index {
-		indexRule = append(indexRule, indexItem)
-	}
-
-	logs, sub, err := _IndexPriceOracle.contract.FilterLogs(opts, "ObservationAdded", indexRule)
+	logs, sub, err := _IndexPriceOracle.contract.FilterLogs(opts, "ObservationAdded")
 	if err != nil {
 		return nil, err
 	}
 	return &IndexPriceOracleObservationAddedIterator{contract: _IndexPriceOracle.contract, event: "ObservationAdded", logs: logs, sub: sub}, nil
 }
 
-// WatchObservationAdded is a free log subscription operation binding the contract event 0x08313f3d7056ea623777211724a29bff62d68075e812cfaccb0b6a02fafdcc68.
+// WatchObservationAdded is a free log subscription operation binding the contract event 0x30ff7507500c6f8ce27c81a024f60f8d17c748cf31e268a17d9f1d3af70ec996.
 //
-// Solidity: event ObservationAdded(uint256 indexed index, uint256 underlyingPrice, uint256 timestamp)
-func (_IndexPriceOracle *IndexPriceOracleFilterer) WatchObservationAdded(opts *bind.WatchOpts, sink chan<- *IndexPriceOracleObservationAdded, index []*big.Int) (event.Subscription, error) {
+// Solidity: event ObservationAdded(uint256[] index, uint256[] underlyingPrice, uint256 timestamp)
+func (_IndexPriceOracle *IndexPriceOracleFilterer) WatchObservationAdded(opts *bind.WatchOpts, sink chan<- *IndexPriceOracleObservationAdded) (event.Subscription, error) {
 
-	var indexRule []interface{}
-	for _, indexItem := range index {
-		indexRule = append(indexRule, indexItem)
-	}
-
-	logs, sub, err := _IndexPriceOracle.contract.WatchLogs(opts, "ObservationAdded", indexRule)
+	logs, sub, err := _IndexPriceOracle.contract.WatchLogs(opts, "ObservationAdded")
 	if err != nil {
 		return nil, err
 	}
@@ -1320,9 +1632,9 @@ func (_IndexPriceOracle *IndexPriceOracleFilterer) WatchObservationAdded(opts *b
 	}), nil
 }
 
-// ParseObservationAdded is a log parse operation binding the contract event 0x08313f3d7056ea623777211724a29bff62d68075e812cfaccb0b6a02fafdcc68.
+// ParseObservationAdded is a log parse operation binding the contract event 0x30ff7507500c6f8ce27c81a024f60f8d17c748cf31e268a17d9f1d3af70ec996.
 //
-// Solidity: event ObservationAdded(uint256 indexed index, uint256 underlyingPrice, uint256 timestamp)
+// Solidity: event ObservationAdded(uint256[] index, uint256[] underlyingPrice, uint256 timestamp)
 func (_IndexPriceOracle *IndexPriceOracleFilterer) ParseObservationAdded(log types.Log) (*IndexPriceOracleObservationAdded, error) {
 	event := new(IndexPriceOracleObservationAdded)
 	if err := _IndexPriceOracle.contract.UnpackLog(event, "ObservationAdded", log); err != nil {
