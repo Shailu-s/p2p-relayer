@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/sirupsen/logrus"
 
+	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 	database "github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
 	"github.com/volmexfinance/relayers/relayer-srv/worker/abi/gnosis"
@@ -667,14 +668,13 @@ func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
 
 func validateOrderTriggerPrice(order *database.Order, triggeredPrice, triggerPrice *big.Int) bool {
 	isStopLoss := _checkLimitOrderType(order.OrderType, true)
-	result := triggeredPrice.Cmp(triggerPrice)
 
 	if order.IsShort == isStopLoss {
 		// Matching trigger price for a stop-loss order or not matching trigger price for a take-profit order
-		return result <= 0
+		return big_ext.LessThanOrEqual(triggeredPrice, triggerPrice)
 	} else {
 		// Matching trigger price for a take-profit order or not matching trigger price for a stop-loss order
-		return result >= 0
+		return big_ext.GreaterThanOrEqual(triggeredPrice, triggerPrice)
 	}
 }
 
