@@ -175,12 +175,13 @@ func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([
 
 // MatchBatchDBOrders fetches buy orders with DB and matched them with proper sell orders
 // returns two arrays of matched orders where first array contains buy orders and second contains sell orders
-func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, error) {
+func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, []string, error) {
 	buyOrder := make([]*db.Order, 0)
 	sellOrder := make([]*db.Order, 0)
+	orderIDs := make([]string, 0)
 	buyPriorityList, err := CreatePriorityList(database, false, "Price desc", w.ChainName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
+		return nil, nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
 	}
 	w.Logger.Infof("Length of buy orders in DB %d", len(buyPriorityList))
 	for i := 0; i < len(buyPriorityList); i++ {
@@ -199,11 +200,11 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 		if buyPriorityList[i].Status == db.MatchedStatusSentFailed {
 			if _, err := w.OrderValidation(buyPriorityList[i]); err != nil {
 				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusBlocked); err != nil {
-					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
+					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 			} else {
 				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
-					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
+					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 				continue
 			}
@@ -217,7 +218,7 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 				continue
 			}
 			w.Logger.Infof("Matched orderID %s with orderID %s", order1.OrderID, order2.OrderID)
-
+			orderIDs = append(orderIDs, order1.OrderID, order2.OrderID)
 			if order1.CreatedAt < order2.CreatedAt {
 				buyOrder = append(buyOrder, &order1)
 				sellOrder = append(sellOrder, &order2)
@@ -227,7 +228,7 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 			}
 		}
 	}
-	return buyOrder, sellOrder, nil
+	return buyOrder, sellOrder, orderIDs, nil
 }
 
 // MatchBatchSellDBOrders fetches buy orders with DB and matched them with proper sell orders

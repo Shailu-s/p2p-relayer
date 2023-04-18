@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -30,13 +31,13 @@ type viperConfig struct{}
 
 func (v *viperConfig) Init() {
 	viper.AutomaticEnv()
-	viper.AddConfigPath("./config-files")
-	// viper.AddConfigPath(os.Getenv("FILE_PATH"))
+	// viper.AddConfigPath("./config-files")
+	viper.AddConfigPath(os.Getenv("FILE_PATH"))
 	replacer := strings.NewReplacer(`.`, `_`)
 	viper.SetEnvKeyReplacer(replacer)
 	viper.SetConfigType(`json`)
-	viper.SetConfigName("config1.json")
-	// viper.SetConfigName(os.Getenv("FILE_NAME"))
+	// viper.SetConfigName("config1.json")
+	viper.SetConfigName(os.Getenv("FILE_NAME"))
 
 	//TODO
 	// if _, err := os.Stat("./config.json.local"); !os.IsNotExist(err) {

@@ -86,7 +86,6 @@ func (a *App) Run(ctx context.Context) {
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	a.relayer.Stop()
 	if err := a.server.Shutdown(ctxShutDown); err != nil {
 		a.logger.Fatalf("Shutdown: %v\n", err)
 	}

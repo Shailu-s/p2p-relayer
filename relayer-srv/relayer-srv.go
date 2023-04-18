@@ -6,7 +6,6 @@ import (
 
 	cr "github.com/ethereum/go-ethereum/crypto"
 	"github.com/sirupsen/logrus"
-	protocols_p2p "github.com/volmexfinance/relayers/relayer-srv/chat"
 	"github.com/volmexfinance/relayers/relayer-srv/db"
 	matching_engine "github.com/volmexfinance/relayers/relayer-srv/matching-engine"
 	postgresDB "github.com/volmexfinance/relayers/relayer-srv/postgresDB"
@@ -34,13 +33,10 @@ type NodeDetails struct {
 type RelayerSrv struct {
 	ctx            context.Context
 	logger         *logrus.Entry
-	node           *p2p.Node
 	db             *db.DataBase
 	postgresDB     *postgresDB.PostgresDataBase
 	matchingCfg    MatchingConfig
 	workers        map[string]*worker.Worker
-	obsRecieveRes  <-chan *protocols_p2p.GossipMessage
-	obsSendReq     chan<- *protocols_p2p.GossipMessage
 	watcher        map[string]*watcher.WatcherSRV
 	GnosisOwnerRes chan *watcher.GnosisChannel
 }
@@ -63,10 +59,6 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbC
 	// if err != nil {
 	// 	logger.Warnf("Unable to run migration: %s", err)
 	// }
-
-	obsRecieveRes := make(chan *protocols_p2p.GossipMessage, 1)
-	obsSendReq := make(chan *protocols_p2p.GossipMessage, 1)
-
 	workers := make(map[string]*worker.Worker)
 	watchers := make(map[string]*watcher.WatcherSRV)
 	gnosisOwnerRes := make(chan *watcher.GnosisChannel)
@@ -95,16 +87,13 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbC
 		watchers[cfg.ChainName] = watcherService
 	}
 	inst := &RelayerSrv{
-		ctx:           ctx,
-		logger:        logger.WithField("layer", "relayer"),
-		node:          p2p.NewP2PNode(ctx, logger, obsRecieveRes, obsSendReq, nodeDetails.PrivateKey, p2pCfg, guardianSetMapping),
-		db:            dbConn,
-		postgresDB:    nil,
-		workers:       workers,
-		obsRecieveRes: obsRecieveRes,
-		obsSendReq:    obsSendReq,
-		matchingCfg:   matchingCfg,
-		watcher:       watchers,
+		ctx:         ctx,
+		logger:      logger.WithField("layer", "relayer"),
+		db:          dbConn,
+		postgresDB:  nil,
+		workers:     workers,
+		matchingCfg: matchingCfg,
+		watcher:     watchers,
 	}
 	return inst
 }
@@ -117,8 +106,6 @@ func signData(data []byte, privKey string) ([]byte, error) {
 }
 
 func (r *RelayerSrv) Run() {
-	r.node.Run()
-
 	for i, worker := range r.workers {
 		go r.MatchAndSendToP2P(worker)
 		go r.RetryMatching(worker)
@@ -130,11 +117,6 @@ func (r *RelayerSrv) Run() {
 	// TODO: Solve error in this
 
 	<-r.ctx.Done()
-	r.Stop()
-}
-
-func (r *RelayerSrv) Stop() {
-	r.node.Stop()
 }
 
 func (r *RelayerSrv) UpdateTx(worker *worker.Worker) {
@@ -166,7 +148,7 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 		}
 		time.Sleep(TimeOut)
 		//TODO: to be changed to batch again
-		order1, order2, err := matching_engine.MatchBatchDBOrders(r.db, wrkr, r.matchingCfg.MaxFailAllowed)
+		order1, order2, orderIDs, err := matching_engine.MatchBatchDBOrders(r.db, wrkr, r.matchingCfg.MaxFailAllowed)
 		if err != nil {
 			r.logger.Warnf("Not any match found yet %v", err)
 			continue
@@ -177,7 +159,6 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 			r.logger.Warn("Not any match found yet")
 			continue
 		}
-		orderID := []string{}
 		_, hash, err := wrkr.CreateGnosisTxAndHash(order1, order2)
 		if err != nil {
 			r.logger.Errorf("Error in MatchAndSendToP2P: %s", err.Error())
@@ -188,7 +169,7 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 		}
 		signToSend := [][]byte{}
 		signToSend = append(signToSend, sign)
-		_, err = r.SendToContract(order1, order2, orderID, signToSend, wrkr)
+		_, err = r.SendToContract(order1, order2, orderIDs, signToSend, wrkr)
 		if err != nil {
 			r.logger.Errorf("Error in MatchAndSendToP2P: SendToContract%s", err.Error())
 		}
