@@ -602,42 +602,67 @@ func (w *Worker) GetMarkPriceOracle() common.Address {
 func (w *Worker) GetMarkPrice(index *big.Int) (*big.Int, error) {
 	twInterval, _ := new(big.Int).SetString("28800", 10)
 	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
-	markTwap, err := markPriceOracle.GetMarkTwap(getCallOpts(), twInterval, index)
+	markTwap, err := markPriceOracle.GetMarkSma(getCallOpts(), twInterval, index)
+	return markTwap, err
+}
+
+func (w *Worker) GetLastPrice(index *big.Int) (*big.Int, error) {
+	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
+	markTwap, err := markPriceOracle.GetLastPrice(getCallOpts(), index)
 	return markTwap, err
 }
 
 func (w *Worker) GetIndexPrice(index *big.Int) (*big.Int, error) {
-	twInterval, _ := new(big.Int).SetString("28800", 10)
-	println(w.indexPriceOracle.String(), "=================address")
 	indexPriceOracle, _ := IndexPriceOracle.NewIndexPriceOracle(w.indexPriceOracle, w.client)
-	indexTwap, err := indexPriceOracle.GetLastTwap(getCallOpts(), twInterval, index)
+	indexTwap, err := indexPriceOracle.GetLastPrice(getCallOpts(), index)
 	return indexTwap, err
 }
 
-func (w *Worker) ValidateOrder(order *database.Order, indexPrice, markPrice *big.Int) bool {
-	if order.OrderType == database.STOP_LOSS_LAST_PRICE || order.OrderType == database.TAKE_PROFIT_LAST_PRICE || order.OrderType == database.ORDER {
-		return true
+func (w *Worker) GetIndexByBaseToken(baseToken common.Address) (*big.Int, error) {
+	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
+	index, err := markPriceOracle.IndexByBaseToken(getCallOpts(), baseToken)
+	return index, err
+}
+
+func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
+	if order.OrderType == database.ORDER {
+		return true, nil
+	}
+	var baseToken string
+	if order.IsShort {
+		baseToken = order.MakeAsset().VirtualToken
+	} else {
+		baseToken = order.TakeAsset().VirtualToken
+	}
+	index, err := w.GetIndexByBaseToken(common.HexToAddress(baseToken))
+	if err != nil {
+		return false, err
 	}
 
 	var triggeredPrice *big.Int
-	var err error
 	switch order.OrderType {
 	case database.STOP_LOSS_INDEX_PRICE, database.TAKE_PROFIT_INDEX_PRICE:
-		triggeredPrice = indexPrice
+		triggeredPrice, err = w.GetIndexPrice(index)
+		if err != nil {
+			return false, err
+		}
 	case database.STOP_LOSS_MARK_PRICE, database.TAKE_PROFIT_MARK_PRICE:
-		triggeredPrice = markPrice
+		triggeredPrice, err = w.GetMarkPrice(index)
+		if err != nil {
+			return false, err
+		}
+	case database.STOP_LOSS_LAST_PRICE, database.TAKE_PROFIT_LAST_PRICE:
+		triggeredPrice, err = w.GetLastPrice(index)
+		if err != nil {
+			return false, err
+		}
 	default:
-		return false
-	}
-
-	if err != nil {
-		logrus.Warn(err, "err in getting cumulative price")
-		return false
+		return false, nil
 	}
 
 	triggerPrice, _ := new(big.Int).SetString(order.TriggerPrice, 10)
 
-	return validateOrderTriggerPrice(order, triggeredPrice, triggerPrice)
+	return validateOrderTriggerPrice(order, triggeredPrice, triggerPrice), nil
 }
 
 func validateOrderTriggerPrice(order *database.Order, triggeredPrice, triggerPrice *big.Int) bool {

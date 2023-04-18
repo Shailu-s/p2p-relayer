@@ -3,7 +3,6 @@ package matching_engine
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -14,7 +13,7 @@ import (
 // /TODO: Add function so it can revert whole changes if error happened after filling or matching
 // MatchOrders takes a order and matches it require order based on price and assets
 // returns two matched orders
-func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worker.Worker, indexPrice, markPrice *big.Int) (db.Order, db.Order, error) {
+func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worker.Worker) (db.Order, db.Order, error) {
 	var priorityList []db.Order
 	var err error
 	if order.IsShort {
@@ -33,25 +32,30 @@ func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worke
 
 	for i := 0; i < len(priorityList); i++ {
 		matchingOrder := &priorityList[i]
-		logger := logrus.New()
+		// logger := logrus.New()
 
 		logrus.WithFields(logrus.Fields{"right_order": matchingOrder.OrderID}).Debugf("matching order with price %f", matchingOrder.Price)
-		switch order.OrderType {
-		case db.STOP_LOSS_LAST_PRICE:
-			checkPriceStopLoss(*order, *matchingOrder, logger)
+		// switch order.OrderType {
+		// case db.STOP_LOSS_LAST_PRICE:
+		// 	checkPriceStopLoss(*order, *matchingOrder, logger)
 
-		case db.TAKE_PROFIT_LAST_PRICE:
-			checkPriceTakeProfit(*order, *matchingOrder, logger)
+		// case db.TAKE_PROFIT_LAST_PRICE:
+		// 	checkPriceTakeProfit(*order, *matchingOrder, logger)
+		// }
+
+		// switch matchingOrder.OrderType {
+		// case db.STOP_LOSS_LAST_PRICE:
+		// 	checkPriceStopLoss(*matchingOrder, *order, logger)
+
+		// case db.TAKE_PROFIT_LAST_PRICE:
+		// 	checkPriceTakeProfit(*matchingOrder, *order, logger)
+		// }
+		validated, err := w.ValidateOrder(matchingOrder)
+		if err != nil {
+			w.Logger.Errorf("Error in validaing limit order %s", err.Error())
+			continue
 		}
-
-		switch matchingOrder.OrderType {
-		case db.STOP_LOSS_LAST_PRICE:
-			checkPriceStopLoss(*matchingOrder, *order, logger)
-
-		case db.TAKE_PROFIT_LAST_PRICE:
-			checkPriceTakeProfit(*matchingOrder, *order, logger)
-		}
-		if !w.ValidateOrder(matchingOrder, indexPrice, markPrice) {
+		if !validated {
 			logrus.Infof("Working on limit order price verification failed with  ID: %f trader: %s ", priorityList[i].OrderID, priorityList[i].Trader)
 			continue
 		}
@@ -100,7 +104,7 @@ func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worke
 			}
 		}
 
-		err := matchAndUpdateOrders(order, matchingOrder)
+		err = matchAndUpdateOrders(order, matchingOrder)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"left_order":  order.OrderID,
@@ -154,17 +158,14 @@ func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([
 		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
 	}
 	logrus.Infof("Length of buy orders in DB %d", len(buyPriorityList))
-	indexPrice, err := w.GetIndexPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting index price")
-	}
-	markPrice, err := w.GetMarkPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting mark price")
-	}
 
 	for i := 0; i < len(buyPriorityList); i++ {
-		if !w.ValidateOrder(&buyPriorityList[i], indexPrice, markPrice) {
+		validated, err := w.ValidateOrder(&buyPriorityList[i])
+		if err != nil {
+			w.Logger.Errorf("Error in validaing limit order %s", err.Error())
+			continue
+		}
+		if !validated {
 			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
 			continue
 		}
@@ -191,7 +192,7 @@ func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([
 
 		}
 		if buyPriorityList[i].OrderID != "" {
-			order1, order2, err := MatchOrders(&buyPriorityList[i], database, maxFail, w, indexPrice, markPrice)
+			order1, order2, err := MatchOrders(&buyPriorityList[i], database, maxFail, w)
 			if err != nil {
 				logrus.Infof("Unable to match order ID %s with any order due to error %s", buyPriorityList[i].OrderID, err.Error())
 				continue
@@ -217,19 +218,16 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 		return nil, nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
 	}
 	w.Logger.Infof("Length of buy orders in DB %d", len(buyPriorityList))
-	indexPrice, err := w.GetIndexPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting index price")
-	}
-	markPrice, err := w.GetMarkPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting mark price")
-	}
-	println("=====================================prices", indexPrice.String(), markPrice.String())
+
 	for i := 0; i < len(buyPriorityList); i++ {
 
 		w.Logger.Infof("Working on buy order with price %f; trader: %s", buyPriorityList[i].Price, buyPriorityList[i].Trader)
-		if !w.ValidateOrder(&buyPriorityList[i], indexPrice, markPrice) {
+		validated, err := w.ValidateOrder(&buyPriorityList[i])
+		if err != nil {
+			w.Logger.Errorf("Error in validaing limit order %s", err.Error())
+			continue
+		}
+		if !validated {
 			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
 			continue
 		}
@@ -257,7 +255,7 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 		}
 
 		if buyPriorityList[i].OrderID != "" {
-			order1, order2, err := MatchOrders(&buyPriorityList[i], database, maxFail, w, indexPrice, markPrice)
+			order1, order2, err := MatchOrders(&buyPriorityList[i], database, maxFail, w)
 			if err != nil {
 				w.Logger.Infof("Unable to match order ID %s with any order due to error %s", buyPriorityList[i].OrderID, err.Error())
 				continue
@@ -286,19 +284,16 @@ func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int
 		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
 	}
 	logrus.Infof("Length of buy orders in DB %d", len(sellPriorityList))
-	indexPrice, err := w.GetIndexPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting index price")
-	}
-	markPrice, err := w.GetMarkPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting mark price")
-	}
 	for i := 0; i < len(sellPriorityList); i++ {
 
 		logrus.Infof("Working on sell order with price %f; trader: %s", sellPriorityList[i].Price, sellPriorityList[i].Trader)
 		logrus.Infof("Working on sell order with price %f; trader: %s", sellPriorityList[i].Price, sellPriorityList[i].Trader)
-		if !w.ValidateOrder(&sellPriorityList[i], indexPrice, markPrice) {
+		validated, err := w.ValidateOrder(&sellPriorityList[i])
+		if err != nil {
+			w.Logger.Errorf("Error in validaing limit order %s", err.Error())
+			continue
+		}
+		if !validated {
 			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", sellPriorityList[i].OrderID, sellPriorityList[i].Trader)
 			continue
 		}
@@ -326,7 +321,7 @@ func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int
 		}
 
 		if sellPriorityList[i].OrderID != "" {
-			order1, order2, err := MatchOrders(&sellPriorityList[i], database, maxFail, w, indexPrice, markPrice)
+			order1, order2, err := MatchOrders(&sellPriorityList[i], database, maxFail, w)
 			if err != nil {
 				logrus.Infof("Unable to match order ID %s with any order due to error %s", sellPriorityList[i].OrderID, err.Error())
 				continue
@@ -354,18 +349,15 @@ func MatchSellDBOrders(database *db.DataBase, maxFail int64, w *worker.Worker) (
 		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
 	}
 	logrus.Infof("Length of sell orders in DB %d", len(sellPriorityList))
-	indexPrice, err := w.GetIndexPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting index price")
-	}
-	markPrice, err := w.GetMarkPrice(big.NewInt(0))
-	if err != nil {
-		logrus.Warn(err, "err in getting mark price")
-	}
 	for i := 0; i < len(sellPriorityList); i++ {
 
 		logrus.Infof("Working on sell order with price %f; trader: %s", sellPriorityList[i].Price, sellPriorityList[i].Trader)
-		if !w.ValidateOrder(&sellPriorityList[i], indexPrice, markPrice) {
+		validated, err := w.ValidateOrder(&sellPriorityList[i])
+		if err != nil {
+			w.Logger.Errorf("Error in validaing limit order %s", err.Error())
+			continue
+		}
+		if !validated {
 			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", sellPriorityList[i].OrderID, sellPriorityList[i].Trader)
 			continue
 		}
@@ -379,7 +371,7 @@ func MatchSellDBOrders(database *db.DataBase, maxFail int64, w *worker.Worker) (
 			continue
 		}
 		if sellPriorityList[i].OrderID != "" {
-			order1, order2, err := MatchOrders(&sellPriorityList[i], database, maxFail, w, indexPrice, markPrice)
+			order1, order2, err := MatchOrders(&sellPriorityList[i], database, maxFail, w)
 			if err != nil {
 				continue
 			}
