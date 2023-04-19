@@ -57,6 +57,10 @@ func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worke
 		}
 		if !validated {
 			logrus.Infof("Working on limit order price verification failed with  ID: %f trader: %s ", priorityList[i].OrderID, priorityList[i].Trader)
+			if err := database.UpdateOrderStatusAndFailCount(matchingOrder.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
+				w.Logger.Errorf("Error in updating status of failed order %s", err.Error())
+				continue
+			}
 			continue
 		}
 
@@ -229,6 +233,10 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 		}
 		if !validated {
 			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
+			if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
+				w.Logger.Errorf("Error in updating status of failed limit order %s", err.Error())
+				continue
+			}
 			continue
 		}
 		if buyPriorityList[i].FailCount > maxFail {
@@ -434,24 +442,24 @@ func VerifyMatchedOrder(order1, order2 *db.Order, database *db.DataBase, maxFail
 	return fmt.Errorf("VERIFICATION FAILED ORDER NOT MATCHED")
 }
 
-func checkPriceStopLoss(order, matchingOrder db.Order, logger *logrus.Logger) {
-	if order.IsShort && order.Price < matchingOrder.Price ||
-		!order.IsShort && order.Price > matchingOrder.Price {
-		logger.WithFields(logrus.Fields{
-			"left_order":  order.OrderID,
-			"right_order": matchingOrder.OrderID,
-		}).Warnf("price is not suitable (%f, %f)", order.Price, matchingOrder.Price)
-		return
-	}
-}
+// func checkPriceStopLoss(order, matchingOrder db.Order, logger *logrus.Logger) {
+// 	if order.IsShort && order.Price < matchingOrder.Price ||
+// 		!order.IsShort && order.Price > matchingOrder.Price {
+// 		logger.WithFields(logrus.Fields{
+// 			"left_order":  order.OrderID,
+// 			"right_order": matchingOrder.OrderID,
+// 		}).Warnf("price is not suitable (%f, %f)", order.Price, matchingOrder.Price)
+// 		return
+// 	}
+// }
 
-func checkPriceTakeProfit(order, matchingOrder db.Order, logger *logrus.Logger) {
-	if order.IsShort && order.Price > matchingOrder.Price ||
-		!order.IsShort && order.Price < matchingOrder.Price {
-		logger.WithFields(logrus.Fields{
-			"left_order":  order.OrderID,
-			"right_order": matchingOrder.OrderID,
-		}).Warnf("price is not suitable (%f, %f)", order.Price, matchingOrder.Price)
-		return
-	}
-}
+// func checkPriceTakeProfit(order, matchingOrder db.Order, logger *logrus.Logger) {
+// 	if order.IsShort && order.Price > matchingOrder.Price ||
+// 		!order.IsShort && order.Price < matchingOrder.Price {
+// 		logger.WithFields(logrus.Fields{
+// 			"left_order":  order.OrderID,
+// 			"right_order": matchingOrder.OrderID,
+// 		}).Warnf("price is not suitable (%f, %f)", order.Price, matchingOrder.Price)
+// 		return
+// 	}
+// }

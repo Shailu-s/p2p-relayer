@@ -639,7 +639,6 @@ func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	var triggeredPrice *big.Int
 	switch order.OrderType {
 	case database.STOP_LOSS_INDEX_PRICE, database.TAKE_PROFIT_INDEX_PRICE:
@@ -667,14 +666,20 @@ func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
 }
 
 func validateOrderTriggerPrice(order *database.Order, triggeredPrice, triggerPrice *big.Int) bool {
-	isStopLoss := _checkLimitOrderType(order.OrderType, true)
-
-	if order.IsShort == isStopLoss {
-		// Matching trigger price for a stop-loss order or not matching trigger price for a take-profit order
-		return big_ext.LessThanOrEqual(triggeredPrice, triggerPrice)
+	if _checkLimitOrderType(order.OrderType, true) {
+		if order.IsShort {
+			return big_ext.LessThanOrEqual(triggeredPrice, triggerPrice)
+		} else {
+			return big_ext.GreaterThanOrEqual(triggeredPrice, triggerPrice)
+		}
+	} else if _checkLimitOrderType(order.OrderType, false) {
+		if order.IsShort {
+			return big_ext.GreaterThanOrEqual(triggeredPrice, triggerPrice)
+		} else {
+			return big_ext.LessThanOrEqual(triggeredPrice, triggerPrice)
+		}
 	} else {
-		// Matching trigger price for a take-profit order or not matching trigger price for a stop-loss order
-		return big_ext.GreaterThanOrEqual(triggeredPrice, triggerPrice)
+		return false
 	}
 }
 

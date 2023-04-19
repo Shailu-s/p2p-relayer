@@ -16,7 +16,7 @@ import (
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 )
 
-const TimeOut = 30 * time.Second
+const TimeOut = 3 * time.Second
 
 // MatchingConfig stores required config for matching criteria and consensus
 type MatchingConfig struct {
@@ -138,9 +138,7 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 			r.logger.Warnf("Not any new order found in DB %v", err)
 			continue
 		}
-		if len(orders) == 0 {
-			r.logger.Warn("Not any new order found in Database")
-		} else {
+		if len(orders) != 0 {
 			err = r.db.UpdateBatchOrderStatus(orders, db.MatchedStatusInit)
 			if err != nil {
 				r.logger.Errorf("Run: Found error in update %s", err.Error())
@@ -150,13 +148,11 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 		//TODO: to be changed to batch again
 		order1, order2, orderIDs, err := matching_engine.MatchBatchDBOrders(r.db, wrkr, r.matchingCfg.MaxFailAllowed)
 		if err != nil {
-			r.logger.Warnf("Not any match found yet %v", err)
 			continue
 		}
 		if len(order1) == 0 || len(order2) == 0 {
 			time.Sleep(TimeOut)
 			// time.Sleep(2 * time.Minute)
-			r.logger.Warn("Not any match found yet")
 			continue
 		}
 		_, hash, err := wrkr.CreateGnosisTxAndHash(order1, order2)
