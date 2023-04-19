@@ -601,9 +601,8 @@ func (w *Worker) GetMarkPriceOracle() common.Address {
 }
 
 func (w *Worker) GetMarkPrice(index *big.Int) (*big.Int, error) {
-	twInterval, _ := new(big.Int).SetString("28800", 10)
 	markPriceOracle, _ := MarkPriceOracle.NewMarkPriceOracle(w.markPriceOracle, w.client)
-	markTwap, err := markPriceOracle.GetMarkSma(getCallOpts(), twInterval, index)
+	markTwap, err := markPriceOracle.GetLastMarkPrice(getCallOpts(), index)
 	return markTwap, err
 }
 
