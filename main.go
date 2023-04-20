@@ -8,7 +8,6 @@ import (
 	"time"
 
 	relayer_srv "github.com/volmexfinance/relayers/relayer-srv"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/p2p"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 
@@ -17,11 +16,11 @@ import (
 	"github.com/volmexfinance/relayers/relayer-srv/config"
 )
 
-func toDbConfig(config config.SqliteDbConfig) db.Config {
-	return db.Config{
-		FileName: config.FileName,
-	}
-}
+// func toDbConfig(config config.SqliteDbConfig) db.Config {
+// 	return db.Config{
+// 		FileName: config.FileName,
+// 	}
+// }
 
 func toMatchingConfig(config config.MatchingConfig) relayer_srv.MatchingConfig {
 	return relayer_srv.MatchingConfig{
@@ -73,7 +72,6 @@ func toP2pConfig(config config.P2PConfig) p2p.Config {
 func main() {
 	cfg := config.NewViperConfig()
 	loggerLevel := cfg.ReadLogLevelConfig()
-	sqliteConfig := cfg.GetSqliteConfig()
 	workersCfg := cfg.ReadWorkersConfig()
 	nodeDetailsCfg := cfg.ReadNodeDetailsConfig()
 	matchingCfg := cfg.ReadMatchingConfig()
@@ -95,14 +93,13 @@ func main() {
 	}()
 
 	nodeDetails := toNodeDetailsConfig(nodeDetailsCfg)
-	dbConfig := toDbConfig(sqliteConfig)
 	matchingConfig := toMatchingConfig(matchingCfg)
 	workerConfigs := toWorkerConfigs(workersCfg)
 	p2pConfig := toP2pConfig(p2pCfg)
 
 	dbURL := postgresDbConfig.AsPostgresDbUrl()
 
-	relayerSrvInstance := relayer_srv.NewRelayerSrv(ctx, logger, dbURL, dbConfig, workerConfigs, p2pConfig, matchingConfig, nodeDetails)
+	relayerSrvInstance := relayer_srv.NewRelayerSrv(ctx, logger, dbURL, workerConfigs, p2pConfig, matchingConfig, nodeDetails)
 	appInstance := app.NewApp(logger, srvURL, relayerSrvInstance)
 
 	appInstance.Run(ctx)
@@ -128,10 +125,10 @@ func NewRootLogger(loggerLevel string) *logrus.Logger {
 		panic(fmt.Errorf("failed to create logs directory: %v", err))
 	}
 
-	logFile, err := os.OpenFile("./logs/relayer.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		panic(fmt.Errorf("error opening file: %v", err))
-	}
-	logger.SetOutput(logFile)
+	// logFile, err := os.OpenFile("./logs/relayer.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	// if err != nil {
+	// 	panic(fmt.Errorf("error opening file: %v", err))
+	// }
+	// logger.SetOutput(logFile)
 	return logger
 }

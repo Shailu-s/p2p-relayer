@@ -42,19 +42,19 @@ type RelayerSrv struct {
 }
 
 // /TODO: Leader handling should be done by DB queries
-func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbConfig db.Config, wrkrCfg []worker.WorkerConfig, p2pCfg p2p.Config, matchingCfg MatchingConfig, nodeDetails NodeDetails) *RelayerSrv {
+func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, wrkrCfg []worker.WorkerConfig, p2pCfg p2p.Config, matchingCfg MatchingConfig, nodeDetails NodeDetails) *RelayerSrv {
 
-	dbConn, err := db.NewDataBase(logger, dbConfig)
+	dbConn, err := db.InitialMigration(dbUrl, *logger)
 	if err != nil {
 		logger.Panicf("Unable to create db connection: %v", err)
 	}
 
-	err = dbConn.InitialMigration()
-	if err != nil {
-		logger.Warnf("Unable to run migration: %v", err)
-	}
+	// err = dbConn.InitialMigration()
+	// if err != nil {
+	// 	logger.Warnf("Unable to run migration: %v", err)
+	// }
 
-	//TODO: Create compose for postgresDB
+	// //TODO: Create compose for postgresDB
 	// postgresDB, err := postgresDB.InitialMigration(dbUrl)
 	// if err != nil {
 	// 	logger.Warnf("Unable to run migration: %s", err)
@@ -108,7 +108,7 @@ func signData(data []byte, privKey string) ([]byte, error) {
 func (r *RelayerSrv) Run() {
 	for i, worker := range r.workers {
 		go r.MatchAndSendToP2P(worker)
-		go r.RetryMatching(worker)
+		// go r.RetryMatching(worker)
 		r.watcher[i].Run()
 		go r.UpdateTx(worker)
 		// go r.MoveSQLiteToPostgres(worker)
@@ -174,88 +174,89 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 	}
 }
 
-// TODO: Handle lost and not found transaction/// if not found, then check if txn after that is success or failed, then convert not found to lost,
-func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
-	for {
-		orders, err := r.db.GetOrdersOnStatus(wrkr.ChainName, []db.MatchedStatus{db.MatchedStatusSentFailed})
-		if err != nil {
-			r.logger.Warnf("Unable to get MatchedStatusSentFailed: %v", err)
-			time.Sleep(10 * time.Second)
-		}
-		if len(orders) > 0 {
-			for _, order := range orders {
-				if _, err := wrkr.OrderValidation(*order); err != nil {
-					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
-						r.logger.Warnf("UpdateOrderStatusById : %s", err)
-						continue
-					}
-				} else {
-					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
-						r.logger.Warnf("UpdateOrderStatusById : %s", err)
-						continue
-					}
-				}
-			}
-		}
-		txns, err := r.db.GetTxnsOnStatus([]db.TransactionStatusType{db.TransactionStatusTypeNotFound, db.TransactionStatusTypeFailed}, wrkr.ChainName)
-		if err != nil {
-			r.logger.Warnf("Unable to get any not found transaction: %v", err)
-			time.Sleep(10 * time.Second)
-			continue
-		}
-		if len(*txns) > 0 {
-			r.logger.Infof("Found %d transactions to retry in DB", len(*txns))
-		}
+// // TODO: Handle lost and not found transaction/// if not found, then check if txn after that is success or failed, then convert not found to lost,
+// func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
+// 	for {
+// 		orders, err := r.db.GetOrdersOnStatus(wrkr.ChainName, []db.MatchedStatus{db.MatchedStatusSentFailed})
+// 		if err != nil {
+// 			r.logger.Warnf("Unable to get MatchedStatusSentFailed: %v", err)
+// 			time.Sleep(10 * time.Second)
+// 		}
+// 		if len(orders) > 0 {
+// 			for _, order := range orders {
+// 				if _, err := wrkr.OrderValidation(*order); err != nil {
+// 					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
+// 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
+// 						continue
+// 					}
+// 				} else {
+// 					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
+// 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
+// 						continue
+// 					}
+// 				}
+// 			}
+// 		}
+// 		// txns, err := r.db.GetTxnsOnStatus([]db.TransactionStatusType{db.TransactionStatusTypeNotFound, db.TransactionStatusTypeFailed}, wrkr.ChainName)
+// 		// if err != nil {
+// 		// 	r.logger.Warnf("Unable to get any not found transaction: %v", err)
+// 		// 	time.Sleep(10 * time.Second)
+// 		// 	continue
+// 		// }
+// 		txns := []string
+// 		if len(*txns) > 0 {
+// 			r.logger.Infof("Found %d transactions to retry in DB", len(*txns))
+// 		}
 
-		for _, txn := range *txns {
-			if txn.TransactionStatus == db.TransactionStatusTypeNotFound {
-				// nextTxn, err := r.db.GetTxnByNonce(txn.Nonce + 1)
-				// if err != nil {
-				// 	r.logger.Warnf("Unable to get txn from next nonce : %v", err)
-				// 	continue
-				// }
-				// if nextTxn.TransactionStatus == db.TransactionStatusTypeFailed || nextTxn.TransactionStatus == db.TransactionStatusTypeSuccess {
-				// 	for _, orderId := range txn.OrderID {
-				// 		if err := r.db.UpdateOrderStatusAndResetFill(orderId, db.MatchedStatusFailedConfirmed); err != nil {
-				// 			r.logger.Warnf("UpdateOrderStatusById : %s", err)
-				// 			continue
-				// 		}
-				// 	}
+// 		for _, txn := range *txns {
+// 			if txn.TransactionStatus == db.TransactionStatusTypeNotFound {
+// 				// nextTxn, err := r.db.GetTxnByNonce(txn.Nonce + 1)
+// 				// if err != nil {
+// 				// 	r.logger.Warnf("Unable to get txn from next nonce : %v", err)
+// 				// 	continue
+// 				// }
+// 				// if nextTxn.TransactionStatus == db.TransactionStatusTypeFailed || nextTxn.TransactionStatus == db.TransactionStatusTypeSuccess {
+// 				// 	for _, orderId := range txn.OrderID {
+// 				// 		if err := r.db.UpdateOrderStatusAndResetFill(orderId, db.MatchedStatusFailedConfirmed); err != nil {
+// 				// 			r.logger.Warnf("UpdateOrderStatusById : %s", err)
+// 				// 			continue
+// 				// 		}
+// 				// 	}
 
-				// 	if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeLost); err != nil {
-				// 		r.logger.Warnf("Unable to update lost transaction : %v", err)
-				// 		continue
-				// 	}
-				// }
-			} else {
-				for _, orderId := range txn.OrderID {
-					order, err := r.db.FindOrder(orderId)
-					if err != nil {
-						r.logger.Warnf("Unable to get order from order id: %v", err)
-						continue
-					}
+// 				// 	if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeLost); err != nil {
+// 				// 		r.logger.Warnf("Unable to update lost transaction : %v", err)
+// 				// 		continue
+// 				// 	}
+// 				// }
+// 			} else {
+// 				for _, orderId := range txn.OrderID {
+// 					order, err := r.db.FindOrder(orderId)
+// 					if err != nil {
+// 						r.logger.Warnf("Unable to get order from order id: %v", err)
+// 						continue
+// 					}
 
-					if _, err := wrkr.OrderValidation(*order); err != nil {
-						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
-							r.logger.Warnf("UpdateOrderStatusById : %s", err)
-							continue
-						}
-					} else {
-						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
-							r.logger.Warnf("UpdateOrderStatusById : %s", err)
-							continue
-						}
-					}
-					if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
-						r.logger.Warnf("UpdateTxnStatus : %s", err)
-						continue
-					}
-				}
-			}
-		}
-		time.Sleep(20 * time.Second)
-	}
-}
+// 					if _, err := wrkr.OrderValidation(*order); err != nil {
+// 						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
+// 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
+// 							continue
+// 						}
+// 					} else {
+// 						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
+// 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
+// 							continue
+// 						}
+// 					}
+// 					if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
+// 						r.logger.Warnf("UpdateTxnStatus : %s", err)
+// 						continue
+// 					}
+// 				}
+// 			}
+// 		}
+// 		time.Sleep(20 * time.Second)
+// 	}
+// }
 
 func (r *RelayerSrv) GetChainID(chainName string) int64 {
 	wrkr := r.workers[chainName]

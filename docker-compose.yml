@@ -1,11 +1,20 @@
 version: '2'
+volumes:
+      postgres-data:
 services:
+  postgres:
+    image: postgres
+    env_file:
+      - ./.env
+    ports:
+      - 5433:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
   perp-relayer:
     build: .
     stdin_open: true
     volumes:
       - ./config-files/config1.json:/app/config.json
-      - ./db/test1.db:/app/test1.db
       - ./logs/relayer.log:/app/logs/relayer.log
     ports:
       - "80:8080"

@@ -1,8 +1,9 @@
 package validation
 
 import (
-	"github.com/volmexfinance/relayers/internal/testlib"
 	"testing"
+
+	"github.com/volmexfinance/relayers/internal/testlib"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
