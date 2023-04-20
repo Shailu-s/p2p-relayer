@@ -56,11 +56,6 @@ func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worke
 			continue
 		}
 		if !validated {
-			logrus.Infof("Working on limit order price verification failed with  ID: %f trader: %s ", priorityList[i].OrderID, priorityList[i].Trader)
-			if err := database.UpdateOrderStatusAndFailCount(matchingOrder.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
-				w.Logger.Errorf("Error in updating status of failed order %s", err.Error())
-				continue
-			}
 			continue
 		}
 
@@ -232,11 +227,6 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 			continue
 		}
 		if !validated {
-			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
-			if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
-				w.Logger.Errorf("Error in updating status of failed limit order %s", err.Error())
-				continue
-			}
 			continue
 		}
 		if buyPriorityList[i].FailCount > maxFail {
