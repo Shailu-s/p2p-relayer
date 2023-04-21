@@ -26,19 +26,28 @@ func (r *RelayerSrv) SendToContract(orderLeft, orderRight []*db.Order, orderIDs 
 		txSent.TransactionStatus = db.TransactionStatusTypeSentFailed
 		txSent.Error = er.Error()
 		r.logger.Warnf("Error sending to contract: %s", er.Error())
-		if err := r.db.UpdateFillAndStatusByTxnLog(orderCombined, db.MatchedStatusSentFailed); err != nil {
+		println("==================1============================1")
+		if err := r.postgresDB.UpdateFillAndStatusByTxnLog(orderCombined, db.MatchedStatusSentFailed); err != nil {
 			return &txSent, fmt.Errorf("SendToContract: Unable to update %w", er)
+		}
+		println("==================122===========================1")
+		if err := r.sqlitedb.UpdateFillAndStatusByTxnLog(orderCombined, db.MatchedStatusSentFailed); err != nil {
+			return &txSent, fmt.Errorf("SendToContract: Unable to update %w", er)
+		}
+		if err := r.postgresDB.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
+			return nil, err
 		}
 		return &txSent, fmt.Errorf("SendToContract: %w", er)
 	}
 	r.logger.Infof("tx sent success for orderIDs: %s, txhash: %s", orderIDs, txHash)
 	// updating tx_sents table
 	txSent.TransactionHash = txHash
-	if err := r.db.UpdateBatchOrderStatus(orderCombined, db.MatchedStatusSentToContract); err != nil {
+	println("==================122===========================1111")
+	if err := r.postgresDB.UpdateBatchOrderStatus(orderCombined, db.MatchedStatusSentToContract); err != nil {
 		return &txSent, fmt.Errorf("SendToContract: %w", err)
 	}
 
-	if err := r.db.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
+	if err := r.postgresDB.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
 		return nil, err
 	}
 	return &txSent, nil

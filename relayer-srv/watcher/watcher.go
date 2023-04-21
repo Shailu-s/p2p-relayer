@@ -20,7 +20,7 @@ type WatcherSRV struct {
 	Logs           chan types.Log
 	Sub            ethereum.Subscription
 	Logger         *logrus.Logger
-	DataBase       *db.DataBase
+	DataBase       *db.PostgresDataBase
 	Worker         *worker.Worker
 	GnosisOwnerRes chan *GnosisChannel
 }
@@ -32,7 +32,7 @@ type GnosisChannel struct {
 }
 
 // NewWatcherSRV returns new instance of watcher
-func NewWatcherSRV(wrkr *worker.Worker, db *db.DataBase, logger *logrus.Logger, gnosisOwnerRes chan *GnosisChannel, chain string) (*WatcherSRV, error) {
+func NewWatcherSRV(wrkr *worker.Worker, db *db.PostgresDataBase, logger *logrus.Logger, gnosisOwnerRes chan *GnosisChannel, chain string) (*WatcherSRV, error) {
 	logs := make(chan types.Log)
 
 	subs, err := wrkr.SubscribeToLogs(logs)

@@ -5,11 +5,11 @@ import (
 )
 
 // CreatePriorityList creates list of order in priority to match them
-func CreatePriorityList(database *db.DataBase, isShort bool, price string, chain string) ([]db.Order, error) {
+func CreatePriorityList(database *db.SQLiteDataBase, isShort bool, price string, chain string) ([]db.Order, error) {
 	return database.GetOrdersSortedByPriority(isShort, price, chain)
 }
 
 // GetPriorityOrderVerification returns priority queue of order for verification
-func GetPriorityOrderVerification(database *db.DataBase, isShort bool, price string, chain string) ([]db.Order, error) {
+func GetPriorityOrderVerification(database *db.SQLiteDataBase, isShort bool, price string, chain string) ([]db.Order, error) {
 	return database.GetOrdersSortedByPriorityForVerification(isShort, price, chain)
 }

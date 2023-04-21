@@ -18,18 +18,18 @@ type PostgresStorageConfig struct {
 	DBPassword string // User's password
 }
 
-type DataBase struct {
+type PostgresDataBase struct {
 	DB     *gorm.DB
 	Logger *logrus.Logger
 }
 
 // TODO: Tx sent confirmed to be moved to postgres
-func InitialMigration(dbURL string, logger logrus.Logger) (*DataBase, error) {
+func InitialMigration(dbURL string, logger logrus.Logger) (*PostgresDataBase, error) {
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&Order{}, &Assets{}, &TransactionLog{}, &TransactionSent{})
 
-	return &DataBase{DB: db, Logger: &logger}, err
+	return &PostgresDataBase{DB: db, Logger: &logger}, err
 }

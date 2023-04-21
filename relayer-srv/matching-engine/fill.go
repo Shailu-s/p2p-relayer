@@ -3,8 +3,9 @@ package matching_engine
 import (
 	"errors"
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 	"math/big"
+
+	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 
 	"github.com/volmexfinance/relayers/relayer-srv/db"
 )
@@ -12,11 +13,12 @@ import (
 func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 	orderLeftFill := orderLeft.OrderFills()
 	orderRightFill := orderRight.OrderFills()
-
+	println(orderLeft.OrderFills().String(), "===============1", orderRight.OrderFills().String())
 	newOrderLeftFill, newOrderRightFill, err := fillOrder(orderLeft, orderRight, orderLeftFill, orderRightFill)
 	if err != nil {
 		return fmt.Errorf("matchAndUpdateOrders: unable to fill order. %w", err)
 	}
+	println(orderLeft.OrderFills().String(), "===============2", orderRight.OrderFills().String(), newOrderLeftFill.String(), newOrderRightFill.String())
 
 	// New fill value should be greater than 0 at all times
 	if big_ext.LessThanOrEqual(newOrderLeftFill, big.NewInt(0)) || big_ext.LessThanOrEqual(newOrderRightFill, big.NewInt(0)) {
@@ -38,6 +40,7 @@ func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 
 func updateOrderFillValue(order *db.Order, newFill *big.Int) {
 	currentFill := order.OrderFills()
+	println("currentfill", currentFill.String(), "nfill", newFill.String())
 	currentFill = currentFill.Add(currentFill, newFill)
 	order.SetOrderFills(currentFill)
 }
@@ -45,7 +48,7 @@ func updateOrderFillValue(order *db.Order, newFill *big.Int) {
 func updateOrderStatus(order *db.Order) error {
 	makeAsset := order.MakeAsset().ValueAsBigInt()
 	fills := order.OrderFills()
-
+	println(fills.String(), "fillllllllllllllllllllllllls", makeAsset.String())
 	if big_ext.Equals(fills, makeAsset) {
 		order.Status = db.MatchedStatusFullMatchFound
 	} else if big_ext.LessThanOrEqual(fills, makeAsset) {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	relayer_srv "github.com/volmexfinance/relayers/relayer-srv"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/p2p"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 
@@ -16,11 +17,11 @@ import (
 	"github.com/volmexfinance/relayers/relayer-srv/config"
 )
 
-// func toDbConfig(config config.SqliteDbConfig) db.Config {
-// 	return db.Config{
-// 		FileName: config.FileName,
-// 	}
-// }
+func toDbConfig(config config.SqliteDbConfig) db.Config {
+	return db.Config{
+		FileName: config.FileName,
+	}
+}
 
 func toMatchingConfig(config config.MatchingConfig) relayer_srv.MatchingConfig {
 	return relayer_srv.MatchingConfig{
@@ -78,6 +79,7 @@ func main() {
 	srvURL := cfg.ReadServiceConfig()
 	postgresDbConfig := cfg.ReadDBConfig()
 	p2pCfg := cfg.ReadP2PConfig()
+	sqliteConfig := cfg.GetSqliteConfig()
 
 	logger := NewRootLogger(loggerLevel)
 
@@ -98,8 +100,9 @@ func main() {
 	p2pConfig := toP2pConfig(p2pCfg)
 
 	dbURL := postgresDbConfig.AsPostgresDbUrl()
+	dbConfig := toDbConfig(sqliteConfig)
 
-	relayerSrvInstance := relayer_srv.NewRelayerSrv(ctx, logger, dbURL, workerConfigs, p2pConfig, matchingConfig, nodeDetails)
+	relayerSrvInstance := relayer_srv.NewRelayerSrv(ctx, logger, dbConfig, dbURL, workerConfigs, p2pConfig, matchingConfig, nodeDetails)
 	appInstance := app.NewApp(logger, srvURL, relayerSrvInstance)
 
 	appInstance.Run(ctx)
