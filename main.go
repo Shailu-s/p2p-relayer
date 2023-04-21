@@ -125,10 +125,10 @@ func NewRootLogger(loggerLevel string) *logrus.Logger {
 		panic(fmt.Errorf("failed to create logs directory: %v", err))
 	}
 
-	// logFile, err := os.OpenFile("./logs/relayer.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	// if err != nil {
-	// 	panic(fmt.Errorf("error opening file: %v", err))
-	// }
-	// logger.SetOutput(logFile)
+	logFile, err := os.OpenFile("./logs/relayer.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	if err != nil {
+		panic(fmt.Errorf("error opening file: %v", err))
+	}
+	logger.SetOutput(logFile)
 	return logger
 }
