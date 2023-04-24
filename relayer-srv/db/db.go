@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	gorm_logger "gorm.io/gorm/logger"
 )
 
 // StorageConfig contains configurations for storage, postgreSQL
@@ -25,7 +26,9 @@ type PostgresDataBase struct {
 
 // TODO: Tx sent confirmed to be moved to postgres
 func InitialMigration(dbURL string, logger logrus.Logger) (*PostgresDataBase, error) {
-	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+	gormConfig := &gorm.Config{Logger: gorm_logger.Default.LogMode(gorm_logger.Silent)}
+
+	db, err := gorm.Open(postgres.Open(dbURL), gormConfig)
 	if err != nil {
 		panic("failed to connect database")
 	}
