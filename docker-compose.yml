@@ -11,13 +11,14 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-    - /root/pg_db:/var/lib/postgresql/
+    - ./pg_db:/var/lib/postgresql/
 
   perp-relayer:
     build: .
     stdin_open: true
     volumes:
       - ./config-files/config1.json:/app/config.json
+      - ./db/test1.db:/app/test1.db
       - ./logs/relayer.log:/app/logs/relayer.log
     ports:
       - "80:8080"
