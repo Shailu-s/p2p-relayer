@@ -315,14 +315,11 @@ func (db *SQLiteDataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newStat
 			logrus.Infof("No txn log history found in DB")
 		} else {
 			if txnLog.OrderID[0] == order.OrderID {
-				println("==================yes")
 				order.Fills = txnLog.NewLeftFill
 			} else {
-				println("==================no")
 				order.Fills = txnLog.NewRightFill
 			}
 		}
-		println("fillafterfail=======================", order.Fills)
 		if result := db.DB.Save(&order); result.Error != nil {
 			return result.Error
 		}

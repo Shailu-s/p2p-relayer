@@ -249,21 +249,17 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 					}
 
 					if _, err := wrkr.OrderValidation(*order); err != nil {
-						println("ffffffffffffffffffffffffffffffffffffffff1")
 
 						if err := r.postgresDB.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
-						println("ffffffffffffffffffffffffffffffffffffffff2")
 
 					} else {
-						println("ffffffffffffffffffffffffffffffffffffffff3")
 						if err := r.postgresDB.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
-						println("ffffffffffffffffffffffffffffffffffffffff4")
 					}
 					if err := r.postgresDB.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateTxnStatus : %s", err)
