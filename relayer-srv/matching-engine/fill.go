@@ -25,9 +25,12 @@ func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 		return errors.New("matchAndUpdateOrders: fill should be greater than 0")
 	}
 
-	updateOrderFillValue(orderLeft, newOrderLeftFill)
-	updateOrderFillValue(orderRight, newOrderRightFill)
-
+	if err := updateOrderFillValue(orderLeft, newOrderLeftFill); err != nil {
+		return err
+	}
+	if err := updateOrderFillValue(orderRight, newOrderRightFill); err != nil {
+		return err
+	}
 	if err := updateOrderStatus(orderLeft); err != nil {
 		return fmt.Errorf("updateOrderStatus: left order failed %w", err)
 	}
@@ -38,11 +41,15 @@ func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 	return nil
 }
 
-func updateOrderFillValue(order *db.Order, newFill *big.Int) {
+func updateOrderFillValue(order *db.Order, newFill *big.Int) error {
 	currentFill := order.OrderFills()
 	println("currentfill", currentFill.String(), "nfill", newFill.String())
 	currentFill = currentFill.Add(currentFill, newFill)
+	if big_ext.GreaterThan(currentFill, order.MakeAsset().ValueAsBigInt()) {
+		return fmt.Errorf("new fill is greter than matched order %s", currentFill.String())
+	}
 	order.SetOrderFills(currentFill)
+	return nil
 }
 
 func updateOrderStatus(order *db.Order) error {

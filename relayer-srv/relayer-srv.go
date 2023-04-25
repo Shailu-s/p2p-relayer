@@ -43,17 +43,17 @@ type RelayerSrv struct {
 // /TODO: Leader handling should be done by DB queries
 func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbConfig db.Config, dbUrl string, wrkrCfg []worker.WorkerConfig, p2pCfg p2p.Config, matchingCfg MatchingConfig, nodeDetails NodeDetails) *RelayerSrv {
 
-	dbConn, err := db.InitialMigration(dbUrl, *logger)
+	pgDbConn, err := db.InitialMigration(dbUrl, *logger)
 	if err != nil {
 		logger.Panicf("Unable to create db connection: %v", err)
 	}
 
-	dbConnite, err := db.NewDataBase(logger, dbConfig)
+	sqliteDBConn, err := db.NewDataBase(logger, dbConfig)
 	if err != nil {
 		logger.Panicf("Unable to create db connection: %v", err)
 	}
 
-	err = dbConnite.SQLiteInitialMigration()
+	err = sqliteDBConn.SQLiteInitialMigration()
 	if err != nil {
 		logger.Warnf("Unable to run migration: %v", err)
 	}
@@ -68,7 +68,7 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbConfig db.Confi
 	gnosisOwnerRes := make(chan *watcher.GnosisChannel)
 	guardianSetMapping := make(map[string][]p2p.GuardianInfo)
 	for _, cfg := range wrkrCfg {
-		workers[cfg.ChainName] = worker.NewWorker(logger, cfg, nodeDetails.PrivateKey, dbConn)
+		workers[cfg.ChainName] = worker.NewWorker(logger, cfg, nodeDetails.PrivateKey, pgDbConn)
 		wrkr := workers[cfg.ChainName]
 		owners, err := wrkr.GetGnosisOwners()
 		if err != nil {
@@ -84,7 +84,7 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbConfig db.Confi
 			logger.Panicf("Unable to get gnosis owners: %v", err)
 		}
 		wrkr.Threshold = threshold.Int64()
-		watcherService, err := watcher.NewWatcherSRV(wrkr, dbConn, logger, gnosisOwnerRes, cfg.ChainName)
+		watcherService, err := watcher.NewWatcherSRV(wrkr, pgDbConn, sqliteDBConn, logger, gnosisOwnerRes, cfg.ChainName)
 		if err != nil {
 			logger.Warnf("Failed to create watcher srv: %v", err)
 		}
@@ -93,8 +93,8 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbConfig db.Confi
 	inst := &RelayerSrv{
 		ctx:         ctx,
 		logger:      logger.WithField("layer", "relayer"),
-		sqlitedb:    dbConnite,
-		postgresDB:  dbConn,
+		sqlitedb:    sqliteDBConn,
+		postgresDB:  pgDbConn,
 		workers:     workers,
 		matchingCfg: matchingCfg,
 		watcher:     watchers,
@@ -177,10 +177,10 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 		if err != nil {
 			r.logger.Errorf("Error in MatchAndSendToP2P: SendToContract%s", err.Error())
 		}
-		order1 = append(order1, order2...)
-		if err := r.sqlitedb.UpdateBatchOrderStatus(order1, db.MatchedStatusSentToContract); err != nil {
-			r.logger.Errorf("Error in MatchAndSendToP2P: UpdateBatchOrderStatus%s", err.Error())
-		}
+		// order1 = append(order1, order2...)
+		// if err := r.sqlitedb.UpdateBatchOrderStatus(order1, db.MatchedStatusSentToContract); err != nil {
+		// 	r.logger.Errorf("Error in MatchAndSendToP2P: UpdateBatchOrderStatus%s", err.Error())
+		// }
 
 		time.Sleep(TimeOut)
 		continue

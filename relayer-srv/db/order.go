@@ -472,6 +472,24 @@ func (db *PostgresDataBase) HandleOrderStatusAndFills(orderID string, fills stri
 	return query.Updates(toUpdate).Error
 }
 
+// HandleOrderStatusAndFills updates status and fills of order on given statuses
+func (db *SQLiteDataBase) HandleOrderStatusAndFills(orderID string, fills string, inStatuses, notInStatuses []MatchedStatus, updateStatus MatchedStatus) error {
+	query := db.DB.Model(Order{}).Where("order_id = ?", orderID)
+	if len(inStatuses) != 0 {
+		query = query.Where("status in (?)", inStatuses)
+	}
+	if len(notInStatuses) != 0 {
+		query = query.Where("status not in (?)", notInStatuses)
+	}
+
+	toUpdate := map[string]interface{}{
+		"status":     updateStatus,
+		"updated_at": time.Now().Unix(),
+		"fills":      fills,
+	}
+	return query.Updates(toUpdate).Error
+}
+
 // HasBaseToken returns true if there is an order with given base token
 func (db *PostgresDataBase) HasBaseToken(baseToken string, chain string) (bool, error) {
 	var order Order
