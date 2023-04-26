@@ -1,10 +1,10 @@
 package postgresdb
 
 import (
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	storage "github.com/volmexfinance/relayers/relayer-srv/db"
 )
 
-func (db *PostgresDataBase) CreateOrderBatch(newOrder []*models.Order) error {
+func (db *PostgresDataBase) CreateOrderBatch(newOrder []*storage.Order) error {
 	if err := db.DB.Create(newOrder); err.Error != nil {
 		return err.Error
 	}

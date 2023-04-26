@@ -1,7 +1,7 @@
 package postgresdb
 
 import (
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	storage "github.com/volmexfinance/relayers/relayer-srv/db"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -28,7 +28,7 @@ func InitialMigration(dbURL string) (*PostgresDataBase, error) {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&models.Order{}, &models.Assets{})
+	db.AutoMigrate(&storage.Order{}, &storage.Assets{})
 
 	// sellOrder := storage.Order{
 	// 	OrderID:      "ggggggggggggggggggg",

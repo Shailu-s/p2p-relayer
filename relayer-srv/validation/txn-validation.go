@@ -2,11 +2,10 @@ package validation
 
 import (
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"sync"
 
 	protocols_p2p "github.com/volmexfinance/relayers/relayer-srv/chat"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 )
 
 var lock sync.Mutex
@@ -31,9 +30,9 @@ func HandleTransactionMessage(dbs *db.DataBase, m *protocols_p2p.GossipMessage) 
 				return fmt.Errorf("HandleTransactionMessage: Order ID not found in database  %w", err)
 			}
 			// TODO: check status to be allowed or not allowed
-			if err := dbs.UpdateOrderStatus(getOrder.OrderID, []models.MatchedStatus{models.MatchedStatusInit, models.MatchedStatusFullMatchFound, models.MatchedStatusPartialMatchFound, models.MatchedStatusPartialMatchConfirmed, models.MatchedStatusSentFailed, models.MatchedStatusValidationConfirmed, models.MatchedStatusValidated},
-				[]models.MatchedStatus{models.MatchedStatusSentToContract, models.MatchedStatusFailedConfirmed, models.MatchedStatusFullMatchConfirmed},
-				models.MatchedStatusSentFailed); err != nil {
+			if err := dbs.UpdateOrderStatus(getOrder.OrderID, []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed, db.MatchedStatusValidationConfirmed, db.MatchedStatusValidated},
+				[]db.MatchedStatus{db.MatchedStatusSentToContract, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchConfirmed},
+				db.MatchedStatusSentFailed); err != nil {
 				return fmt.Errorf("HandleTransactionMessage: Unable to update status of order %w", err)
 			}
 		}
@@ -44,7 +43,7 @@ func HandleTransactionMessage(dbs *db.DataBase, m *protocols_p2p.GossipMessage) 
 	if err != nil {
 		return fmt.Errorf("HandleTransactionMessage: Unable to GetTxnByID %w", err)
 	} else if txSentByID.ID == 0 {
-		newTxSent := models.TransactionSent{OrderID: txOrderID, TransactionHash: txHash, TransactionStatus: models.TransactionStatusTypeInit}
+		newTxSent := db.TransactionSent{OrderID: txOrderID, TransactionHash: txHash, TransactionStatus: db.TransactionStatusTypeInit}
 		if err := dbs.CreateTxSent(&newTxSent, chain); err != nil {
 			return fmt.Errorf("HandleTransactionMessage: Unable to create next leader transaction in DB %w", err)
 		}
@@ -63,15 +62,15 @@ func HandleTransactionMessage(dbs *db.DataBase, m *protocols_p2p.GossipMessage) 
 			return fmt.Errorf("HandleTransactionMessage: Order ID not found in database  %w", err)
 		}
 		// TODO: check status to be allowed or not allowed
-		if err := dbs.UpdateOrderStatus(getOrder.OrderID, []models.MatchedStatus{models.MatchedStatusInit, models.MatchedStatusFullMatchFound, models.MatchedStatusPartialMatchFound, models.MatchedStatusPartialMatchConfirmed, models.MatchedStatusSentFailed, models.MatchedStatusValidationConfirmed, models.MatchedStatusValidated},
-			[]models.MatchedStatus{models.MatchedStatusSentToContract, models.MatchedStatusFailedConfirmed, models.MatchedStatusFullMatchConfirmed},
-			models.MatchedStatusSentToContract); err != nil {
+		if err := dbs.UpdateOrderStatus(getOrder.OrderID, []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed, db.MatchedStatusValidationConfirmed, db.MatchedStatusValidated},
+			[]db.MatchedStatus{db.MatchedStatusSentToContract, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchConfirmed},
+			db.MatchedStatusSentToContract); err != nil {
 			return fmt.Errorf("HandleTransactionMessage: Unable to update status of order %w", err)
 		}
 	}
 
-	/// New leader found from p2p and created in models
-	newLeaderTx := models.TransactionSent{Leader: txNextLeader, LeaderPublicKey: txNextPubkey, TransactionStatus: models.TransactionStatusTypeInit}
+	/// New leader found from p2p and created in db
+	newLeaderTx := db.TransactionSent{Leader: txNextLeader, LeaderPublicKey: txNextPubkey, TransactionStatus: db.TransactionStatusTypeInit}
 	if err := dbs.CreateTxSent(&newLeaderTx, chain); err != nil {
 		return fmt.Errorf("HandleTransactionMessage: Unable to create next leader transaction in DB %w", err)
 	}

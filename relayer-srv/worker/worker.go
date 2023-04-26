@@ -6,7 +6,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"math/big"
 	"strings"
 	"time"
@@ -261,7 +260,7 @@ func (w *Worker) GetNonce() (*big.Int, error) {
 }
 
 // CreateGnosisTxAndHash creates encoded gnosis tx with relayer signature
-func (w *Worker) CreateGnosisTxAndHash(buyOrder, sellOrder []*models.Order) (SafeTransaction, []byte, error) {
+func (w *Worker) CreateGnosisTxAndHash(buyOrder, sellOrder []*database.Order) (SafeTransaction, []byte, error) {
 	GnosisContract, err := gnosis.NewGnosis(w.gnosisContract, w.client)
 	if err != nil {
 		return SafeTransaction{}, nil, fmt.Errorf("CreateGnosisTx: %w", err)
@@ -309,7 +308,7 @@ func (w *Worker) CreateGnosisTxAndHash(buyOrder, sellOrder []*models.Order) (Saf
 	return safeTx, safeTxHashBytes, nil
 }
 
-func (w *Worker) OrderValidation(order models.Order) (bool, error) {
+func (w *Worker) OrderValidation(order database.Order) (bool, error) {
 	PositioningContract, err := Positioning.NewPositioning(w.positioningContract, w.client)
 	if err != nil {
 		return false, fmt.Errorf("OrderValidation: %w", err)
@@ -322,7 +321,7 @@ func (w *Worker) OrderValidation(order models.Order) (bool, error) {
 	triggerPrice := order.OrderTriggerPrice()
 
 	posOrder := Positioning.LibOrderOrder{
-		OrderType:              order.OrderType.Bytes(),
+		OrderType:              utils.StringToBytes4(order.OrderType),
 		Trader:                 common.HexToAddress(order.Trader),
 		Deadline:               order.Deadline,
 		IsShort:                order.IsShort,
@@ -365,7 +364,7 @@ func (w *Worker) RedialClient() error {
 }
 
 // Executes openPosition through gnosis
-func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*models.Order, signatures [][]byte) (string, error) {
+func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signatures [][]byte) (string, error) {
 
 	newSafeTx, _, err := w.CreateGnosisTxAndHash(orderLeft, orderRight)
 
@@ -625,36 +624,33 @@ func (w *Worker) GetIndexByBaseToken(baseToken common.Address) (*big.Int, error)
 	return index, err
 }
 
-func (w *Worker) ValidateOrder(order *models.Order) (bool, error) {
-	if order.OrderType == models.OrderTypeOrder {
+func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
+	if order.OrderType == database.ORDER {
 		return true, nil
 	}
-
 	var baseToken string
 	if order.IsShort {
 		baseToken = order.MakeAsset().VirtualToken
 	} else {
 		baseToken = order.TakeAsset().VirtualToken
 	}
-
 	index, err := w.GetIndexByBaseToken(common.HexToAddress(baseToken))
 	if err != nil {
 		return false, err
 	}
-
 	var triggeredPrice *big.Int
 	switch order.OrderType {
-	case models.OrderTypeStopLossIndexPrice, models.OrderTypeTakeProfitIndexPrice:
+	case database.STOP_LOSS_INDEX_PRICE, database.TAKE_PROFIT_INDEX_PRICE:
 		triggeredPrice, err = w.GetIndexPrice(index)
 		if err != nil {
 			return false, err
 		}
-	case models.OrderTypeStopLossMarkPrice, models.OrderTypeTakeProfitMarkPrice:
+	case database.STOP_LOSS_MARK_PRICE, database.TAKE_PROFIT_MARK_PRICE:
 		triggeredPrice, err = w.GetMarkPrice(index)
 		if err != nil {
 			return false, err
 		}
-	case models.OrderTypeStopLossLastPrice, models.OrderTypeTakeProfitLastPrice:
+	case database.STOP_LOSS_LAST_PRICE, database.TAKE_PROFIT_LAST_PRICE:
 		triggeredPrice, err = w.GetLastPrice(index)
 		if err != nil {
 			return false, err
@@ -668,14 +664,14 @@ func (w *Worker) ValidateOrder(order *models.Order) (bool, error) {
 	return validateOrderTriggerPrice(order, triggeredPrice, triggerPrice), nil
 }
 
-func validateOrderTriggerPrice(order *models.Order, triggeredPrice, triggerPrice *big.Int) bool {
-	if checkLimitOrderType(order.OrderType, true) {
+func validateOrderTriggerPrice(order *database.Order, triggeredPrice, triggerPrice *big.Int) bool {
+	if _checkLimitOrderType(order.OrderType, true) {
 		if order.IsShort {
 			return big_ext.LessThanOrEqual(triggeredPrice, triggerPrice)
 		} else {
 			return big_ext.GreaterThanOrEqual(triggeredPrice, triggerPrice)
 		}
-	} else if checkLimitOrderType(order.OrderType, false) {
+	} else if _checkLimitOrderType(order.OrderType, false) {
 		if order.IsShort {
 			return big_ext.GreaterThanOrEqual(triggeredPrice, triggerPrice)
 		} else {
@@ -686,9 +682,9 @@ func validateOrderTriggerPrice(order *models.Order, triggeredPrice, triggerPrice
 	}
 }
 
-func checkLimitOrderType(orderType models.OrderType, isStopLoss bool) bool {
+func _checkLimitOrderType(orderType string, isStopLoss bool) bool {
 	if isStopLoss {
-		return orderType == models.OrderTypeStopLossIndexPrice || orderType == models.OrderTypeStopLossLastPrice || orderType == models.OrderTypeStopLossMarkPrice
+		return orderType == database.STOP_LOSS_INDEX_PRICE || orderType == database.STOP_LOSS_LAST_PRICE || orderType == database.STOP_LOSS_MARK_PRICE
 	}
-	return orderType == models.OrderTypeTakeProfitIndexPrice || orderType == models.OrderTypeTakeProfitLastPrice || orderType == models.OrderTypeTakeProfitMarkPrice
+	return orderType == database.TAKE_PROFIT_INDEX_PRICE || orderType == database.TAKE_PROFIT_LAST_PRICE || orderType == database.TAKE_PROFIT_MARK_PRICE
 }

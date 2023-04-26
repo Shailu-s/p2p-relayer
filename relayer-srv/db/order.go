@@ -3,7 +3,6 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"gorm.io/gorm"
 	"time"
 
@@ -11,12 +10,12 @@ import (
 )
 
 // CreateOrder creates an order in the DB
-func (db *DataBase) CreateOrder(order *models.Order) error {
+func (db *DataBase) CreateOrder(order *Order) error {
 	order.CreatedAt = time.Now().Unix()
 	order.UpdatedAt = time.Now().Unix()
 
 	if order.Status == 0 {
-		order.Status = models.MatchedStatusInit
+		order.Status = MatchedStatusInit
 	}
 
 	if err := db.DB.Create(&order); err.Error != nil {
@@ -26,7 +25,7 @@ func (db *DataBase) CreateOrder(order *models.Order) error {
 }
 
 // CreateOrderInBatch creates multiple orders in the DB
-func (db *DataBase) CreateOrderInBatch(orders []*models.Order) error {
+func (db *DataBase) CreateOrderInBatch(orders []*Order) error {
 	result := db.DB.Create(&orders)
 	if result.Error != nil {
 		return result.Error
@@ -36,13 +35,13 @@ func (db *DataBase) CreateOrderInBatch(orders []*models.Order) error {
 }
 
 // GetZeroOrders returns orders from DB with status zero
-func (db *DataBase) GetZeroOrders(chain string) ([]*models.Order, error) {
-	var orders []*models.Order
+func (db *DataBase) GetZeroOrders(chain string) ([]*Order, error) {
+	var orders []*Order
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where(
 			"chain_name = ? AND status in (?)",
-			chain, []models.MatchedStatus{models.MatchedStatusZero},
+			chain, []MatchedStatus{MatchedStatusZero},
 		).
 		Preload("Assets").
 		Find(&orders)
@@ -54,10 +53,10 @@ func (db *DataBase) GetZeroOrders(chain string) ([]*models.Order, error) {
 }
 
 // GetOrdersOnStatus returns orders from DB with given statuses
-func (db *DataBase) GetOrdersOnStatus(chain string, statuses []models.MatchedStatus) ([]*models.Order, error) {
-	var orders []*models.Order
+func (db *DataBase) GetOrdersOnStatus(chain string, statuses []MatchedStatus) ([]*Order, error) {
+	var orders []*Order
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where(
 			"chain_name = ? AND status in (?)",
 			chain, statuses,
@@ -72,7 +71,7 @@ func (db *DataBase) GetOrdersOnStatus(chain string, statuses []models.MatchedSta
 }
 
 // DeleteBatchOrder deletes order from DB
-func (db *DataBase) DeleteBatchOrder(order []*models.Order) error {
+func (db *DataBase) DeleteBatchOrder(order []*Order) error {
 	result := db.DB.Delete(&order)
 	if result.Error != nil {
 		return result.Error
@@ -82,11 +81,11 @@ func (db *DataBase) DeleteBatchOrder(order []*models.Order) error {
 }
 
 // UpdateOrder take an updated order and update it
-func (db *DataBase) UpdateOrder(order *models.Order) error {
+func (db *DataBase) UpdateOrder(order *Order) error {
 	order.UpdatedAt = time.Now().Unix()
 
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where("order_id = ?", order.OrderID).
 		Updates(order)
 	if result.Error != nil {
@@ -97,7 +96,7 @@ func (db *DataBase) UpdateOrder(order *models.Order) error {
 }
 
 // UpdateOrCreateOrder updates the order or creates a new one if it doesn't exist
-func (db *DataBase) UpdateOrCreateOrder(order *models.Order) error {
+func (db *DataBase) UpdateOrCreateOrder(order *Order) error {
 	result, err := db.FindOrder(order.OrderID)
 	if err != nil {
 		return err
@@ -117,7 +116,7 @@ func (db *DataBase) UpdateOrCreateOrder(order *models.Order) error {
 }
 
 // UpdateOrderStatusAndFailCount updates order status and its fail count
-func (db *DataBase) UpdateOrderStatusAndFailCount(orderID string, status models.MatchedStatus) error {
+func (db *DataBase) UpdateOrderStatusAndFailCount(orderID string, status MatchedStatus) error {
 	order, err := db.FindOrder(orderID)
 	if err != nil {
 		return errors.New("Order not Found")
@@ -134,9 +133,9 @@ func (db *DataBase) UpdateOrderStatusAndFailCount(orderID string, status models.
 }
 
 // UpdateOrderStatusByMinSalt updates order status with condition
-func (db *DataBase) UpdateOrderStatusByMinSalt(trader string, minSalt string, inStatuses, notInStatuses []models.MatchedStatus, updateStatus models.MatchedStatus, chain string) error {
+func (db *DataBase) UpdateOrderStatusByMinSalt(trader string, minSalt string, inStatuses, notInStatuses []MatchedStatus, updateStatus MatchedStatus, chain string) error {
 	query := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where(
 			"chain_name = ? AND trader = ? AND salt <= ?",
 			chain, trader, minSalt,
@@ -159,13 +158,13 @@ func (db *DataBase) UpdateOrderStatusByMinSalt(trader string, minSalt string, in
 
 // UpdateBatchOrderStatus updates status of order in batch
 // TODO: Don't use for loop to batch update order
-func (db *DataBase) UpdateBatchOrderStatus(newOrder []*models.Order, newStatus models.MatchedStatus) error {
+func (db *DataBase) UpdateBatchOrderStatus(newOrder []*Order, newStatus MatchedStatus) error {
 	for _, order := range newOrder {
 		order.UpdatedAt = time.Now().Unix()
 		order.Status = newStatus
 
 		result := db.DB.
-			Model(models.Order{}).
+			Model(Order{}).
 			Where("order_id = ?", order.OrderID).
 			Updates(order)
 
@@ -177,16 +176,16 @@ func (db *DataBase) UpdateBatchOrderStatus(newOrder []*models.Order, newStatus m
 }
 
 // UpdateFillAndStatusByTxnLog updates status of order in batch and fills by transaction log
-func (db *DataBase) UpdateFillAndStatusByTxnLog(newOrder []*models.Order, newStatus models.MatchedStatus) error {
+func (db *DataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newStatus MatchedStatus) error {
 	// TODO: Don't use for loop to batch update order
 	for _, order := range newOrder {
 		order.UpdatedAt = time.Now().Unix()
 		order.Status = newStatus
 		order.Fills = ""
 
-		var txnLog models.TransactionLog
+		var txnLog TransactionLog
 		result := db.DB.
-			Model(models.TransactionLog{}).
+			Model(TransactionLog{}).
 			Where("order_id LIKE ?", fmt.Sprintf("%%%s%%", order.OrderID)).
 			Last(&txnLog)
 		if result.Error != nil {
@@ -207,10 +206,10 @@ func (db *DataBase) UpdateFillAndStatusByTxnLog(newOrder []*models.Order, newSta
 }
 
 // FindOrder return order from DB with given order ID
-func (db *DataBase) FindOrder(orderID string) (*models.Order, error) {
-	var order models.Order
+func (db *DataBase) FindOrder(orderID string) (*Order, error) {
+	var order Order
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where("order_id = ?", orderID).
 		Preload("Assets").
 		Limit(1).
@@ -223,11 +222,11 @@ func (db *DataBase) FindOrder(orderID string) (*models.Order, error) {
 }
 
 // FindOrderStatus returns the status of given order ID in DB
-func (db *DataBase) FindOrderStatus(orderID string) (models.MatchedStatus, error) {
-	var order models.Order
+func (db *DataBase) FindOrderStatus(orderID string) (MatchedStatus, error) {
+	var order Order
 
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where("order_id = ?", orderID).
 		Limit(1).
 		Find(&order)
@@ -239,11 +238,11 @@ func (db *DataBase) FindOrderStatus(orderID string) (models.MatchedStatus, error
 }
 
 // FindFulfilledFailedOrder return order with given status
-func (db *DataBase) FindFulfilledFailedOrder(statuses []models.MatchedStatus, chain string) ([]*models.Order, error) {
-	var orders []*models.Order
+func (db *DataBase) FindFulfilledFailedOrder(statuses []MatchedStatus, chain string) ([]*Order, error) {
+	var orders []*Order
 
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where(
 			"chain_name = ? AND status in (?)",
 			chain, statuses,
@@ -258,20 +257,20 @@ func (db *DataBase) FindFulfilledFailedOrder(statuses []models.MatchedStatus, ch
 }
 
 // GetOrdersSortedByPriority returns orders sorted by priority
-func (db *DataBase) GetOrdersSortedByPriority(isShort bool, price string, chain string) ([]models.Order, error) {
-	var PriorityList []models.Order
+func (db *DataBase) GetOrdersSortedByPriority(isShort bool, price string, chain string) ([]Order, error) {
+	var PriorityList []Order
 
 	result := db.DB.
-		Model(&models.Order{}).
+		Model(&Order{}).
 		Where(
 			"chain_name = ? AND is_short = ? AND status IN (?)",
 			chain,
 			isShort,
-			[]models.MatchedStatus{
-				models.MatchedStatusInit,
-				models.MatchedStatusPartialMatchFound, //TODO: this would NOT allow same order to be again matched in same tx
-				models.MatchedStatusPartialMatchConfirmed,
-				models.MatchedStatusFailedConfirmed, //TODO: once failed confirmed where should it go?
+			[]MatchedStatus{
+				MatchedStatusInit,
+				MatchedStatusPartialMatchFound, //TODO: this would NOT allow same order to be again matched in same tx
+				MatchedStatusPartialMatchConfirmed,
+				MatchedStatusFailedConfirmed, //TODO: once failed confirmed where should it go?
 			},
 		).
 		Preload("Assets").
@@ -285,37 +284,37 @@ func (db *DataBase) GetOrdersSortedByPriority(isShort bool, price string, chain 
 }
 
 // GetOrdersSortedByPriorityForVerification returns orders sorted by priority
-func (db *DataBase) GetOrdersSortedByPriorityForVerification(isShort bool, price string, chain string) ([]models.Order, error) {
-	var PriorityOrder []models.Order
+func (db *DataBase) GetOrdersSortedByPriorityForVerification(isShort bool, price string, chain string) ([]Order, error) {
+	var PriorityOrder []Order
 
 	result := db.DB.
-		Model(&models.Order{}).
+		Model(&Order{}).
 		Where(
 			"chain_name = ? AND is_short = ? AND status IN (?)",
 			chain,
 			isShort,
-			[]models.MatchedStatus{
-				models.MatchedStatusInit,
-				models.MatchedStatusPartialMatchConfirmed,
-				models.MatchedStatusFullMatchFound,
-				models.MatchedStatusPartialMatchFound,
-				models.MatchedStatusValidated,
-				models.MatchedStatusValidationConfirmed,
-				models.MatchedStatusFailedConfirmed,
+			[]MatchedStatus{
+				MatchedStatusInit,
+				MatchedStatusPartialMatchConfirmed,
+				MatchedStatusFullMatchFound,
+				MatchedStatusPartialMatchFound,
+				MatchedStatusValidated,
+				MatchedStatusValidationConfirmed,
+				MatchedStatusFailedConfirmed,
 			}).
 		Preload("Assets").
 		Order(price).
 		Find(&PriorityOrder)
 	if result.Error != nil {
-		return []models.Order{}, fmt.Errorf("GetPriorityOrderVerification: unable to get order from db %w", result.Error)
+		return []Order{}, fmt.Errorf("GetPriorityOrderVerification: unable to get order from db %w", result.Error)
 	}
 
 	return PriorityOrder, nil
 }
 
 // HandleOrderStatusAndFills updates status and fills of order on given statuses
-func (db *DataBase) HandleOrderStatusAndFills(orderID string, fills string, inStatuses, notInStatuses []models.MatchedStatus, updateStatus models.MatchedStatus) error {
-	query := db.DB.Model(models.Order{}).Where("order_id = ?", orderID)
+func (db *DataBase) HandleOrderStatusAndFills(orderID string, fills string, inStatuses, notInStatuses []MatchedStatus, updateStatus MatchedStatus) error {
+	query := db.DB.Model(Order{}).Where("order_id = ?", orderID)
 	if len(inStatuses) != 0 {
 		query = query.Where("status in (?)", inStatuses)
 	}
@@ -333,7 +332,7 @@ func (db *DataBase) HandleOrderStatusAndFills(orderID string, fills string, inSt
 
 // HasBaseToken returns true if there is an order with given base token
 func (db *DataBase) HasBaseToken(baseToken string, chain string) (bool, error) {
-	var order models.Order
+	var order Order
 	result := db.DB.
 		Joins("JOIN assets ON assets.orderbook_id = orders.order_id AND assets.virtual_token = ?", baseToken).
 		Where("chain_name = ?", chain).
@@ -350,8 +349,8 @@ func (db *DataBase) HasBaseToken(baseToken string, chain string) (bool, error) {
 }
 
 // DepthOrderDetails returns order details with given base token and status
-func (db *DataBase) DepthOrderDetails(baseToken string, inStatuses []models.MatchedStatus, chain string) ([]*models.Order, error) {
-	var orders []*models.Order
+func (db *DataBase) DepthOrderDetails(baseToken string, inStatuses []MatchedStatus, chain string) ([]*Order, error) {
+	var orders []*Order
 	result := db.DB.
 		Joins("JOIN assets ON assets.orderbook_id = orders.order_id AND assets.virtual_token = ?", baseToken).
 		Where("chain_name = ? AND status in (?)", chain, inStatuses).
@@ -366,8 +365,8 @@ func (db *DataBase) DepthOrderDetails(baseToken string, inStatuses []models.Matc
 }
 
 // UpdateOrderStatus updates status of order on given statuses
-func (db *DataBase) UpdateOrderStatus(orderID string, inStatuses, notInStatuses []models.MatchedStatus, updateStatus models.MatchedStatus) error {
-	query := db.DB.Model(models.Order{}).Where("order_id = ?", orderID)
+func (db *DataBase) UpdateOrderStatus(orderID string, inStatuses, notInStatuses []MatchedStatus, updateStatus MatchedStatus) error {
+	query := db.DB.Model(Order{}).Where("order_id = ?", orderID)
 	if len(inStatuses) != 0 {
 		query = query.Where("status in (?)", inStatuses)
 	}
@@ -383,8 +382,8 @@ func (db *DataBase) UpdateOrderStatus(orderID string, inStatuses, notInStatuses 
 }
 
 // UpdateDeadlinePassedOrder updates the status of and order that has passed deadline
-func (db *DataBase) UpdateDeadlinePassedOrder(currentTime uint64, notInStatuses []models.MatchedStatus, chain string) error {
-	query := db.DB.Model(models.Order{}).Where("deadline < ?", currentTime)
+func (db *DataBase) UpdateDeadlinePassedOrder(currentTime uint64, notInStatuses []MatchedStatus, chain string) error {
+	query := db.DB.Model(Order{}).Where("deadline < ?", currentTime)
 
 	if len(notInStatuses) != 0 {
 		query = query.Where(
@@ -394,18 +393,18 @@ func (db *DataBase) UpdateDeadlinePassedOrder(currentTime uint64, notInStatuses 
 	}
 
 	toUpdate := map[string]interface{}{
-		"status":     models.MatchedStatusBlocked,
+		"status":     MatchedStatusBlocked,
 		"updated_at": time.Now().Unix(),
 	}
 	return query.Updates(toUpdate).Error
 }
 
 // GetAllOrdersByTraderWithoutSign return order without trader sign, used for API
-func (db *DataBase) GetAllOrdersByTraderWithoutSign(trader string, chain string) ([]*models.Order, error) {
-	var orders []*models.Order
+func (db *DataBase) GetAllOrdersByTraderWithoutSign(trader string, chain string) ([]*Order, error) {
+	var orders []*Order
 
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Select("order_id", "order_type", "trader", "deadline", "is_short", "salt", "trigger_price", "fills", "created_at", "price", "status").
 		Where(
 			"chain_name = ? AND trader = ?",
@@ -422,19 +421,19 @@ func (db *DataBase) GetAllOrdersByTraderWithoutSign(trader string, chain string)
 }
 
 // GetOrderQueue return order queue, used for API
-func (db *DataBase) GetOrderQueue(chain string) ([]*models.Order, error) {
-	var orders []*models.Order
+func (db *DataBase) GetOrderQueue(chain string) ([]*Order, error) {
+	var orders []*Order
 
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Select("order_id", "is_short", "trigger_price", "created_at", "status").
 		Where(
 			"chain_name = ? AND status in (?)",
 			chain,
-			[]models.MatchedStatus{
-				models.MatchedStatusInit,
-				models.MatchedStatusPartialMatchConfirmed,
-				models.MatchedStatusFailedConfirmed,
+			[]MatchedStatus{
+				MatchedStatusInit,
+				MatchedStatusPartialMatchConfirmed,
+				MatchedStatusFailedConfirmed,
 			},
 		).
 		Order("created_at desc").
@@ -449,14 +448,14 @@ func (db *DataBase) GetOrderQueue(chain string) ([]*models.Order, error) {
 }
 
 // RemoveOrder deletes order from DB
-func (db *DataBase) RemoveOrder(orderID string, status []models.MatchedStatus) error {
+func (db *DataBase) RemoveOrder(orderID string, status []MatchedStatus) error {
 	result := db.DB.
-		Model(models.Order{}).
+		Model(Order{}).
 		Where(
 			"order_id = ? AND status in ?",
 			orderID, status,
 		).
-		Delete(models.Order{})
+		Delete(Order{})
 	if result.Error != nil {
 		return result.Error
 	}

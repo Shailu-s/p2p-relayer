@@ -3,30 +3,29 @@ package matching_engine
 import (
 	"errors"
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 )
 
 // /TODO: Add function so it can revert whole changes if error happened after filling or matching
 // MatchOrders takes a order and matches it require order based on price and assets
 // returns two matched orders
-func MatchOrders(order *models.Order, database *db.DataBase, maxFail int64, w *worker.Worker) (models.Order, models.Order, error) {
-	var priorityList []models.Order
+func MatchOrders(order *db.Order, database *db.DataBase, maxFail int64, w *worker.Worker) (db.Order, db.Order, error) {
+	var priorityList []db.Order
 	var err error
 	if order.IsShort {
 		priorityList, err = CreatePriorityList(database, false, "Price Desc", w.ChainName)
 		if err != nil {
-			return models.Order{}, models.Order{}, fmt.Errorf("UNABLE TO GET PRIORITY QUEUE: %w", err)
+			return db.Order{}, db.Order{}, fmt.Errorf("UNABLE TO GET PRIORITY QUEUE: %w", err)
 		}
 		logrus.Infof("Length of buy orders %d", len(priorityList))
 	} else {
 		priorityList, err = CreatePriorityList(database, true, "Price", w.ChainName)
 		if err != nil {
-			return models.Order{}, models.Order{}, fmt.Errorf("UNABLE TO GET PRIORITY QUEUE: %w", err)
+			return db.Order{}, db.Order{}, fmt.Errorf("UNABLE TO GET PRIORITY QUEUE: %w", err)
 		}
 		logrus.Infof("Length of sell orders %d", len(priorityList))
 	}
@@ -37,18 +36,18 @@ func MatchOrders(order *models.Order, database *db.DataBase, maxFail int64, w *w
 
 		logrus.WithFields(logrus.Fields{"right_order": matchingOrder.OrderID}).Debugf("matching order with price %f", matchingOrder.Price)
 		// switch order.OrderType {
-		// case models.STOP_LOSS_LAST_PRICE:
+		// case db.STOP_LOSS_LAST_PRICE:
 		// 	checkPriceStopLoss(*order, *matchingOrder, logger)
 
-		// case models.TAKE_PROFIT_LAST_PRICE:
+		// case db.TAKE_PROFIT_LAST_PRICE:
 		// 	checkPriceTakeProfit(*order, *matchingOrder, logger)
 		// }
 
 		// switch matchingOrder.OrderType {
-		// case models.STOP_LOSS_LAST_PRICE:
+		// case db.STOP_LOSS_LAST_PRICE:
 		// 	checkPriceStopLoss(*matchingOrder, *order, logger)
 
-		// case models.TAKE_PROFIT_LAST_PRICE:
+		// case db.TAKE_PROFIT_LAST_PRICE:
 		// 	checkPriceTakeProfit(*matchingOrder, *order, logger)
 		// }
 		validated, err := w.ValidateOrder(matchingOrder)
@@ -76,11 +75,11 @@ func MatchOrders(order *models.Order, database *db.DataBase, maxFail int64, w *w
 		}
 
 		if matchingOrder.FailCount > maxFail {
-			err = database.UpdateOrderStatus(priorityList[i].OrderID, []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusBlocked)
+			err = database.UpdateOrderStatus(priorityList[i].OrderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusBlocked)
 			if err != nil {
-				return models.Order{}, models.Order{}, fmt.Errorf("unable to update failed blocked order: %w", err)
+				return db.Order{}, db.Order{}, fmt.Errorf("unable to update failed blocked order: %w", err)
 			}
-			return models.Order{}, models.Order{}, fmt.Errorf("unable to match failed order: %w", err)
+			return db.Order{}, db.Order{}, fmt.Errorf("unable to match failed order: %w", err)
 		}
 
 		if order.FailCount > 0 {
@@ -119,7 +118,7 @@ func MatchOrders(order *models.Order, database *db.DataBase, maxFail int64, w *w
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"order_id": order.OrderID,
-			}).Warnf("order not found in models: %v", err)
+			}).Warnf("order not found in db: %v", err)
 			continue
 		}
 
@@ -127,7 +126,7 @@ func MatchOrders(order *models.Order, database *db.DataBase, maxFail int64, w *w
 			if err := database.CreateOrder(order); err != nil {
 				logrus.WithFields(logrus.Fields{
 					"order_id": order.OrderID,
-				}).Warnf("unable to create models order: %v", err)
+				}).Warnf("unable to create db order: %v", err)
 				continue
 			}
 		}
@@ -135,24 +134,24 @@ func MatchOrders(order *models.Order, database *db.DataBase, maxFail int64, w *w
 		if err := database.UpdateOrder(order); err != nil {
 			logrus.WithFields(logrus.Fields{
 				"order_id": order.OrderID,
-			}).Warnf("unable to update models order: %v", err)
+			}).Warnf("unable to update db order: %v", err)
 			continue
 		}
 
 		if err := database.UpdateOrder(matchingOrder); err != nil {
 			logrus.WithFields(logrus.Fields{
 				"order_id": matchingOrder.OrderID,
-			}).Warnf("unable to update models order: %v", err)
+			}).Warnf("unable to update db order: %v", err)
 			continue
 		}
 
 		return *order, *matchingOrder, nil
 	}
 
-	return models.Order{}, models.Order{}, errors.New("no match found")
+	return db.Order{}, db.Order{}, errors.New("no match found")
 }
 
-func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*models.Order, []*models.Order, error) {
+func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, error) {
 	buyPriorityList, err := CreatePriorityList(database, false, "Price desc", w.ChainName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
@@ -166,25 +165,25 @@ func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([
 			continue
 		}
 		if !validated {
-			logrus.Infof("Buy limit order price verification failed with  ID: %s trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
+			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
 			continue
 		}
 		logrus.Infof("Working on buy order with price %f; trader: %s", buyPriorityList[i].Price, buyPriorityList[i].Trader)
 
 		if buyPriorityList[i].FailCount > maxFail {
-			err = database.UpdateOrderStatus(buyPriorityList[i].OrderID, []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusBlocked)
+			err = database.UpdateOrderStatus(buyPriorityList[i].OrderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusBlocked)
 			if err != nil {
 				return nil, nil, fmt.Errorf("tried more that twice, can't process order: %w", err)
 			}
 			return nil, nil, fmt.Errorf("tried more that twice, can't process order: %w", err)
 		}
-		if buyPriorityList[i].Status == models.MatchedStatusSentFailed {
+		if buyPriorityList[i].Status == db.MatchedStatusSentFailed {
 			if _, err := w.OrderValidation(buyPriorityList[i]); err != nil {
-				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, models.MatchedStatusBlocked); err != nil {
+				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusBlocked); err != nil {
 					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 			} else {
-				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, models.MatchedStatusFailedConfirmed); err != nil {
+				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
 					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 				continue
@@ -198,9 +197,9 @@ func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([
 				continue
 			}
 			if order1.CreatedAt < order2.CreatedAt {
-				return []*models.Order{&order1}, []*models.Order{&order2}, nil
+				return []*db.Order{&order1}, []*db.Order{&order2}, nil
 			} else {
-				return []*models.Order{&order2}, []*models.Order{&order1}, nil
+				return []*db.Order{&order2}, []*db.Order{&order1}, nil
 			}
 		}
 	}
@@ -209,9 +208,9 @@ func MatchBuyDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([
 
 // MatchBatchDBOrders fetches buy orders with DB and matched them with proper sell orders
 // returns two arrays of matched orders where first array contains buy orders and second contains sell orders
-func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*models.Order, []*models.Order, []string, error) {
-	buyOrder := make([]*models.Order, 0)
-	sellOrder := make([]*models.Order, 0)
+func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, []string, error) {
+	buyOrder := make([]*db.Order, 0)
+	sellOrder := make([]*db.Order, 0)
 	orderIDs := make([]string, 0)
 	buyPriorityList, err := CreatePriorityList(database, false, "Price desc", w.ChainName)
 	if err != nil {
@@ -231,7 +230,7 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 			continue
 		}
 		if buyPriorityList[i].FailCount > maxFail {
-			err = database.UpdateOrderStatus(buyPriorityList[i].OrderID, []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusBlocked)
+			err = database.UpdateOrderStatus(buyPriorityList[i].OrderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusBlocked)
 			if err != nil {
 				w.Logger.Error("Tried more that twice, can't process order")
 				continue
@@ -239,13 +238,13 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 			w.Logger.Error("Tried more that twice, can't process order")
 			continue
 		}
-		if buyPriorityList[i].Status == models.MatchedStatusSentFailed {
+		if buyPriorityList[i].Status == db.MatchedStatusSentFailed {
 			if _, err := w.OrderValidation(buyPriorityList[i]); err != nil {
-				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, models.MatchedStatusBlocked); err != nil {
+				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusBlocked); err != nil {
 					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 			} else {
-				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, models.MatchedStatusFailedConfirmed); err != nil {
+				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
 					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 				continue
@@ -275,9 +274,9 @@ func MatchBatchDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) 
 
 // MatchBatchSellDBOrders fetches buy orders with DB and matched them with proper sell orders
 // returns two arrays of matched orders where first array contains buy orders and second contains sell orders
-func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*models.Order, []*models.Order, error) {
-	buyOrder := make([]*models.Order, 0)
-	sellOrder := make([]*models.Order, 0)
+func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, error) {
+	buyOrder := make([]*db.Order, 0)
+	sellOrder := make([]*db.Order, 0)
 	sellPriorityList, err := CreatePriorityList(database, true, "Price", w.ChainName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
@@ -293,11 +292,11 @@ func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int
 			continue
 		}
 		if !validated {
-			logrus.Infof("Buy limit order price verification failed with  ID: %s trader: %s ", sellPriorityList[i].OrderID, sellPriorityList[i].Trader)
+			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", sellPriorityList[i].OrderID, sellPriorityList[i].Trader)
 			continue
 		}
 		if sellPriorityList[i].FailCount > maxFail {
-			err = database.UpdateOrderStatus(sellPriorityList[i].OrderID, []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusBlocked)
+			err = database.UpdateOrderStatus(sellPriorityList[i].OrderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusBlocked)
 			if err != nil {
 				logrus.Error("Tried more that twice, can't process order")
 				continue
@@ -305,13 +304,13 @@ func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int
 			logrus.Error("Tried more that twice, can't process order")
 			continue
 		}
-		if sellPriorityList[i].Status == models.MatchedStatusSentFailed {
+		if sellPriorityList[i].Status == db.MatchedStatusSentFailed {
 			if _, err := w.OrderValidation(sellPriorityList[i]); err != nil {
-				if err := database.UpdateOrderStatusAndFailCount(sellPriorityList[i].OrderID, models.MatchedStatusBlocked); err != nil {
+				if err := database.UpdateOrderStatusAndFailCount(sellPriorityList[i].OrderID, db.MatchedStatusBlocked); err != nil {
 					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 			} else {
-				if err := database.UpdateOrderStatusAndFailCount(sellPriorityList[i].OrderID, models.MatchedStatusFailedConfirmed); err != nil {
+				if err := database.UpdateOrderStatusAndFailCount(sellPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
 					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 				continue
@@ -340,9 +339,9 @@ func MatchBatchSellDBOrders(database *db.DataBase, w *worker.Worker, maxFail int
 // MatchSellDBOrders fetch sell orders with DB and matched them with proper buy orders
 // returns two arrays of matched orders where first array contains buy orders and second contains sell orders
 // TODO: Match it as buyDBOrders
-func MatchSellDBOrders(database *db.DataBase, maxFail int64, w *worker.Worker) ([]*models.Order, []*models.Order, error) {
-	buyOrder := make([]*models.Order, 0)
-	sellOrder := make([]*models.Order, 0)
+func MatchSellDBOrders(database *db.DataBase, maxFail int64, w *worker.Worker) ([]*db.Order, []*db.Order, error) {
+	buyOrder := make([]*db.Order, 0)
+	sellOrder := make([]*db.Order, 0)
 	sellPriorityList, err := CreatePriorityList(database, false, "Price desc", w.ChainName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
@@ -357,11 +356,11 @@ func MatchSellDBOrders(database *db.DataBase, maxFail int64, w *worker.Worker) (
 			continue
 		}
 		if !validated {
-			logrus.Infof("Buy limit order price verification failed with  ID: %s trader: %s ", sellPriorityList[i].OrderID, sellPriorityList[i].Trader)
+			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", sellPriorityList[i].OrderID, sellPriorityList[i].Trader)
 			continue
 		}
 		if sellPriorityList[i].FailCount > maxFail {
-			err = database.UpdateOrderStatus(sellPriorityList[i].OrderID, []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusBlocked)
+			err = database.UpdateOrderStatus(sellPriorityList[i].OrderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusBlocked)
 			if err != nil {
 				logrus.Error("Tried more that twice, can't process order")
 				continue
@@ -387,7 +386,7 @@ func MatchSellDBOrders(database *db.DataBase, maxFail int64, w *worker.Worker) (
 }
 
 // VerifyMatchedOrder verifies two matched orders from database
-func VerifyMatchedOrder(order1, order2 *models.Order, database *db.DataBase, maxFail int64, chainName string) error {
+func VerifyMatchedOrder(order1, order2 *db.Order, database *db.DataBase, maxFail int64, chainName string) error {
 	if order1.FailCount > 0 {
 		txnSents, err := database.GetTxnByOrderID(order1.OrderID)
 		if err != nil {
@@ -407,7 +406,7 @@ func VerifyMatchedOrder(order1, order2 *models.Order, database *db.DataBase, max
 		}
 	}
 
-	var matchedOrder []models.Order
+	var matchedOrder []db.Order
 	var err error
 	if order1.IsShort {
 		matchedOrder, err = GetPriorityOrderVerification(database, false, "Price Desc", chainName)
@@ -433,7 +432,7 @@ func VerifyMatchedOrder(order1, order2 *models.Order, database *db.DataBase, max
 	return fmt.Errorf("VERIFICATION FAILED ORDER NOT MATCHED")
 }
 
-// func checkPriceStopLoss(order, matchingOrder models.Order, logger *logrus.Logger) {
+// func checkPriceStopLoss(order, matchingOrder db.Order, logger *logrus.Logger) {
 // 	if order.IsShort && order.Price < matchingOrder.Price ||
 // 		!order.IsShort && order.Price > matchingOrder.Price {
 // 		logger.WithFields(logrus.Fields{
@@ -444,7 +443,7 @@ func VerifyMatchedOrder(order1, order2 *models.Order, database *db.DataBase, max
 // 	}
 // }
 
-// func checkPriceTakeProfit(order, matchingOrder models.Order, logger *logrus.Logger) {
+// func checkPriceTakeProfit(order, matchingOrder db.Order, logger *logrus.Logger) {
 // 	if order.IsShort && order.Price > matchingOrder.Price ||
 // 		!order.IsShort && order.Price < matchingOrder.Price {
 // 		logger.WithFields(logrus.Fields{

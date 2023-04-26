@@ -6,17 +6,17 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 )
 
 // TODO: sanitization make this as go routine
 // TODO: handle order status as well here
 func (r *RelayerSrv) UpdateTxnSentStatus(wrkr *worker.Worker) error {
-	transactionStatusType := []models.TransactionStatusType{models.TransactionStatusTypeInit, models.TransactionStatusTypePending, models.TransactionStatusTypeNotFound}
+	transactionStatusType := []db.TransactionStatusType{db.TransactionStatusTypeInit, db.TransactionStatusTypePending, db.TransactionStatusTypeNotFound}
 	transactionToCheck, err := r.db.GetTxnsOnStatus(transactionStatusType, wrkr.ChainName)
 	if err != nil {
-		return fmt.Errorf("failed to get transaction from models")
+		return fmt.Errorf("failed to get transaction from db")
 	}
 
 	for _, txn := range *transactionToCheck {
@@ -24,12 +24,12 @@ func (r *RelayerSrv) UpdateTxnSentStatus(wrkr *worker.Worker) error {
 
 		if er != nil {
 			if errors.Is(er, ethereum.NotFound) { // Case : Not Found
-				err := r.db.UpdateTxnStatus(&txn, models.TransactionStatusTypeNotFound)
+				err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeNotFound)
 				if err != nil {
 					return fmt.Errorf("failed to update%w", err)
 				}
-			} else if strings.Contains(er.Error(), "transaction pending") && txn.TransactionStatus != models.TransactionStatusTypePending { // Case : Pending
-				err := r.db.UpdateTxnStatus(&txn, models.TransactionStatusTypePending)
+			} else if strings.Contains(er.Error(), "transaction pending") && txn.TransactionStatus != db.TransactionStatusTypePending { // Case : Pending
+				err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypePending)
 				if err != nil {
 					return fmt.Errorf("failed to update %w", err)
 				}
@@ -40,12 +40,12 @@ func (r *RelayerSrv) UpdateTxnSentStatus(wrkr *worker.Worker) error {
 
 		if txReceipt != nil {
 			if txReceipt.Status == 1 { // Case : Success
-				err := r.db.UpdateTxnStatus(&txn, models.TransactionStatusTypeSuccess)
+				err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeSuccess)
 				if err != nil {
 					return fmt.Errorf("failed to update%w", err)
 				}
 			} else if txReceipt.Status == 0 { // Case : Failed
-				err := r.db.UpdateTxnStatus(&txn, models.TransactionStatusTypeFailed)
+				err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailed)
 				if err != nil {
 					return fmt.Errorf("failed to update%w", err)
 				}

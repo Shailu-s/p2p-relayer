@@ -2,12 +2,11 @@ package relayer_srv
 
 import (
 	"context"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"time"
 
 	cr "github.com/ethereum/go-ethereum/crypto"
 	"github.com/sirupsen/logrus"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	matching_engine "github.com/volmexfinance/relayers/relayer-srv/matching-engine"
 	postgresDB "github.com/volmexfinance/relayers/relayer-srv/postgresDB"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
@@ -47,7 +46,7 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbC
 
 	dbConn, err := db.NewDataBase(logger, dbConfig)
 	if err != nil {
-		logger.Panicf("Unable to create models connection: %v", err)
+		logger.Panicf("Unable to create db connection: %v", err)
 	}
 
 	err = dbConn.InitialMigration()
@@ -140,7 +139,7 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 			continue
 		}
 		if len(orders) != 0 {
-			err = r.db.UpdateBatchOrderStatus(orders, models.MatchedStatusInit)
+			err = r.db.UpdateBatchOrderStatus(orders, db.MatchedStatusInit)
 			if err != nil {
 				r.logger.Errorf("Run: Found error in update %s", err.Error())
 			}
@@ -178,7 +177,7 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 // TODO: Handle lost and not found transaction/// if not found, then check if txn after that is success or failed, then convert not found to lost,
 func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 	for {
-		orders, err := r.db.GetOrdersOnStatus(wrkr.ChainName, []models.MatchedStatus{models.MatchedStatusSentFailed})
+		orders, err := r.db.GetOrdersOnStatus(wrkr.ChainName, []db.MatchedStatus{db.MatchedStatusSentFailed})
 		if err != nil {
 			r.logger.Warnf("Unable to get MatchedStatusSentFailed: %v", err)
 			time.Sleep(10 * time.Second)
@@ -186,19 +185,19 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 		if len(orders) > 0 {
 			for _, order := range orders {
 				if _, err := wrkr.OrderValidation(*order); err != nil {
-					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, models.MatchedStatusBlocked); err != nil {
+					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
 					}
 				} else {
-					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, models.MatchedStatusFailedConfirmed); err != nil {
+					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
 					}
 				}
 			}
 		}
-		txns, err := r.db.GetTxnsOnStatus([]models.TransactionStatusType{models.TransactionStatusTypeNotFound, models.TransactionStatusTypeFailed}, wrkr.ChainName)
+		txns, err := r.db.GetTxnsOnStatus([]db.TransactionStatusType{db.TransactionStatusTypeNotFound, db.TransactionStatusTypeFailed}, wrkr.ChainName)
 		if err != nil {
 			r.logger.Warnf("Unable to get any not found transaction: %v", err)
 			time.Sleep(10 * time.Second)
@@ -209,21 +208,21 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 		}
 
 		for _, txn := range *txns {
-			if txn.TransactionStatus == models.TransactionStatusTypeNotFound {
-				// nextTxn, err := r.models.GetTxnByNonce(txn.Nonce + 1)
+			if txn.TransactionStatus == db.TransactionStatusTypeNotFound {
+				// nextTxn, err := r.db.GetTxnByNonce(txn.Nonce + 1)
 				// if err != nil {
 				// 	r.logger.Warnf("Unable to get txn from next nonce : %v", err)
 				// 	continue
 				// }
-				// if nextTxn.TransactionStatus == models.TransactionStatusTypeFailed || nextTxn.TransactionStatus == models.TransactionStatusTypeSuccess {
+				// if nextTxn.TransactionStatus == db.TransactionStatusTypeFailed || nextTxn.TransactionStatus == db.TransactionStatusTypeSuccess {
 				// 	for _, orderId := range txn.OrderID {
-				// 		if err := r.models.UpdateOrderStatusAndResetFill(orderId, models.MatchedStatusFailedConfirmed); err != nil {
+				// 		if err := r.db.UpdateOrderStatusAndResetFill(orderId, db.MatchedStatusFailedConfirmed); err != nil {
 				// 			r.logger.Warnf("UpdateOrderStatusById : %s", err)
 				// 			continue
 				// 		}
 				// 	}
 
-				// 	if err := r.models.UpdateTxnStatus(&txn, models.TransactionStatusTypeLost); err != nil {
+				// 	if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeLost); err != nil {
 				// 		r.logger.Warnf("Unable to update lost transaction : %v", err)
 				// 		continue
 				// 	}
@@ -237,17 +236,17 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 					}
 
 					if _, err := wrkr.OrderValidation(*order); err != nil {
-						if err := r.db.UpdateOrderStatusAndFailCount(orderId, models.MatchedStatusBlocked); err != nil {
+						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
 					} else {
-						if err := r.db.UpdateOrderStatusAndFailCount(orderId, models.MatchedStatusFailedConfirmed); err != nil {
+						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
 					}
-					if err := r.db.UpdateTxnStatus(&txn, models.TransactionStatusTypeFailedConfirmed); err != nil {
+					if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateTxnStatus : %s", err)
 						continue
 					}

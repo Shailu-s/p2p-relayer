@@ -3,7 +3,7 @@ package relayer_srv
 import (
 	"time"
 
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 )
 
@@ -16,12 +16,12 @@ func (r *RelayerSrv) MoveSQLiteToPostgres(wrkr *worker.Worker) {
 			r.logger.Errorf("DBIntegration: Unable to get current timestamp %v", err)
 			continue
 		}
-		if ok := r.db.UpdateDeadlinePassedOrder(currentTime, []models.MatchedStatus{models.MatchedStatusSentToContract, models.MatchedStatusBlocked}, wrkr.ChainName); ok != nil {
+		if ok := r.db.UpdateDeadlinePassedOrder(currentTime, []db.MatchedStatus{db.MatchedStatusSentToContract, db.MatchedStatusBlocked}, wrkr.ChainName); ok != nil {
 			r.logger.Errorf("DBIntegration: Unable to update deadline passed order %v", err)
 			continue
 		}
 
-		fulfilledOrders, err := r.db.FindFulfilledFailedOrder([]models.MatchedStatus{models.Canceled, models.MatchedStatusFullMatchConfirmed, models.MatchedStatusBlocked}, wrkr.ChainName)
+		fulfilledOrders, err := r.db.FindFulfilledFailedOrder([]db.MatchedStatus{db.Canceled, db.MatchedStatusFullMatchConfirmed, db.MatchedStatusBlocked}, wrkr.ChainName)
 		if err != nil {
 			r.logger.Errorf("DBIntegration: %v", err)
 			continue

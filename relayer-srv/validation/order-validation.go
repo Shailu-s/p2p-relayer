@@ -2,17 +2,16 @@ package validation
 
 import (
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/volmexfinance/relayers/relayer-srv/db/models"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
 )
 
 // ValidateMatchedOrder validates two matched order receieved on p2p
-func ValidateMatchedOrder(order1, order2 models.Order, dbs *db.DataBase, maxFail int64) error {
+func ValidateMatchedOrder(order1, order2 db.Order, dbs *db.DataBase, maxFail int64) error {
 
 	// err := matching_engine.VerifyMatchedOrder(&order1, &order2, dbs, maxFail)
 	// if err != nil {
@@ -23,14 +22,14 @@ func ValidateMatchedOrder(order1, order2 models.Order, dbs *db.DataBase, maxFail
 	if order1.Trader == order2.Trader || order1.IsShort == order2.IsShort || order1.MakeAsset().VirtualToken != order2.TakeAsset().VirtualToken || order2.TakeAsset().VirtualToken != order1.MakeAsset().VirtualToken {
 		return fmt.Errorf("ValidateMatchedOrder: validation failed")
 	} else {
-		if err := dbs.UpdateOrderStatus(order1.OrderID, []models.MatchedStatus{models.MatchedStatusInit, models.MatchedStatusFullMatchFound, models.MatchedStatusPartialMatchFound, models.MatchedStatusPartialMatchConfirmed, models.MatchedStatusFailedConfirmed},
-			[]models.MatchedStatus{models.MatchedStatusValidated, models.MatchedStatusValidationConfirmed, models.MatchedStatusSentToContract, models.MatchedStatusSentFailed, models.MatchedStatusFullMatchConfirmed},
-			models.MatchedStatusValidated); err != nil {
+		if err := dbs.UpdateOrderStatus(order1.OrderID, []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusFailedConfirmed},
+			[]db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusSentFailed, db.MatchedStatusFullMatchConfirmed},
+			db.MatchedStatusValidated); err != nil {
 			return fmt.Errorf("ValidateMatchedOrder: err in handling status %w", err)
 		}
-		if err := dbs.UpdateOrderStatus(order2.OrderID, []models.MatchedStatus{models.MatchedStatusInit, models.MatchedStatusFullMatchFound, models.MatchedStatusPartialMatchFound, models.MatchedStatusPartialMatchConfirmed, models.MatchedStatusFailedConfirmed},
-			[]models.MatchedStatus{models.MatchedStatusValidated, models.MatchedStatusValidationConfirmed, models.MatchedStatusSentToContract, models.MatchedStatusSentFailed, models.MatchedStatusFullMatchConfirmed},
-			models.MatchedStatusValidated); err != nil {
+		if err := dbs.UpdateOrderStatus(order2.OrderID, []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusFailedConfirmed},
+			[]db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusSentFailed, db.MatchedStatusFullMatchConfirmed},
+			db.MatchedStatusValidated); err != nil {
 			return fmt.Errorf("ValidateMatchedOrder: err in handling statuses %w", err)
 		}
 
@@ -39,11 +38,11 @@ func ValidateMatchedOrder(order1, order2 models.Order, dbs *db.DataBase, maxFail
 }
 
 // ValtoidateThreshold updates status of order in DB to MatchedStatusValidationConfirmed
-func ValidateThreshold(orders []*models.Order, dbs *db.DataBase) error {
+func ValidateThreshold(orders []*db.Order, dbs *db.DataBase) error {
 	for _, order := range orders {
-		if err := dbs.UpdateOrderStatus(order.OrderID, []models.MatchedStatus{models.MatchedStatusValidated, models.MatchedStatusFullMatchFound, models.MatchedStatusPartialMatchFound},
-			[]models.MatchedStatus{models.MatchedStatusInit, models.MatchedStatusValidationConfirmed, models.MatchedStatusSentToContract, models.MatchedStatusSentFailed, models.MatchedStatusFullMatchConfirmed, models.MatchedStatusPartialMatchConfirmed, models.MatchedStatusFailedConfirmed},
-			models.MatchedStatusValidationConfirmed); err != nil {
+		if err := dbs.UpdateOrderStatus(order.OrderID, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound},
+			[]db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusSentFailed, db.MatchedStatusFullMatchConfirmed, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusFailedConfirmed},
+			db.MatchedStatusValidationConfirmed); err != nil {
 			return fmt.Errorf("ValidateThreshold: %w", err)
 		}
 	}
@@ -52,7 +51,7 @@ func ValidateThreshold(orders []*models.Order, dbs *db.DataBase) error {
 
 // TODO: to be picked with security tasks (add order validation according to perp)
 // VerifyOrderSignature verfies signature of user provided in order
-func VerifyOrderSignature(order models.Order, chainID int64, peripheryContract string) error {
+func VerifyOrderSignature(order db.Order, chainID int64, peripheryContract string) error {
 	hash, err := utils.EncodeOrderStruct(order, chainID, peripheryContract)
 	if err != nil {
 		return err
