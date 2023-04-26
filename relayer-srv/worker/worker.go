@@ -57,7 +57,7 @@ type Worker struct {
 	indexPriceOracle    common.Address
 	markPriceOracle     common.Address
 	peripheryContract   common.Address
-	DB                  *database.PostgresDataBase
+	DB                  *database.DataBase
 	PrivateKey          string
 	Threshold           int64
 }
@@ -128,7 +128,7 @@ type SafeTransaction struct {
 }
 
 // NewWorker initialises worker (used for tx on any chain)
-func NewWorker(logger *logrus.Logger, cfg WorkerConfig, privateKey string, db *database.PostgresDataBase) *Worker {
+func NewWorker(logger *logrus.Logger, cfg WorkerConfig, privateKey string, db *database.DataBase) *Worker {
 	client, err := ethclient.Dial(cfg.Provider)
 	if err != nil {
 		logger.Panicf("rpc error for %s: %v", cfg.ChainName, err)

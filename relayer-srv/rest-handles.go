@@ -5,23 +5,23 @@ import (
 )
 
 func (r *RelayerSrv) InsertOrder(order *db.Order) error {
-	return r.postgresDB.CreateOrder(order)
+	return r.db.CreateOrder(order)
 }
 
 func (r *RelayerSrv) GetAllOrders(trader string, chainName string) ([]*db.Order, error) {
-	return r.postgresDB.GetAllOrdersByTraderWithoutSign(trader, chainName)
+	return r.db.GetAllOrdersByTraderWithoutSign(trader, chainName)
 }
 
 func (r *RelayerSrv) GetOrderQueue(chain string) ([]*db.Order, error) {
-	return r.postgresDB.GetOrderQueue(chain)
+	return r.db.GetOrderQueue(chain)
 }
 
 func (r *RelayerSrv) CheckHasBaseToken(token, chain string) (bool, error) {
-	return r.postgresDB.HasBaseToken(token, chain)
+	return r.db.HasBaseToken(token, chain)
 }
 
 func (r *RelayerSrv) GetDepthOrderDetails(token, chain string) ([]*db.Order, error) {
-	return r.postgresDB.DepthOrderDetails(
+	return r.db.DepthOrderDetails(
 		token,
 		[]db.MatchedStatus{
 			db.MatchedStatusInit,

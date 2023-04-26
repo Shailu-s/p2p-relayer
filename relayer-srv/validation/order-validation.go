@@ -11,7 +11,7 @@ import (
 )
 
 // ValidateMatchedOrder validates two matched order receieved on p2p
-func ValidateMatchedOrder(order1, order2 db.Order, dbs *db.SQLiteDataBase, maxFail int64) error {
+func ValidateMatchedOrder(order1, order2 db.Order, dbs *db.DataBase, maxFail int64) error {
 
 	// err := matching_engine.VerifyMatchedOrder(&order1, &order2, dbs, maxFail)
 	// if err != nil {
@@ -38,7 +38,7 @@ func ValidateMatchedOrder(order1, order2 db.Order, dbs *db.SQLiteDataBase, maxFa
 }
 
 // ValtoidateThreshold updates status of order in DB to MatchedStatusValidationConfirmed
-func ValidateThreshold(orders []*db.Order, dbs *db.SQLiteDataBase) error {
+func ValidateThreshold(orders []*db.Order, dbs *db.DataBase) error {
 	for _, order := range orders {
 		if err := dbs.UpdateOrderStatus(order.OrderID, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound},
 			[]db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusSentFailed, db.MatchedStatusFullMatchConfirmed, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusFailedConfirmed},

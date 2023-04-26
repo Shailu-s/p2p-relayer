@@ -12,7 +12,7 @@ var lock sync.Mutex
 
 // TODO: Handle issue with transaction status
 // HandleTransactionMessage handles transaction message received on p2p
-func HandleTransactionMessage(dbs *db.PostgresDataBase, m *protocols_p2p.GossipMessage) error {
+func HandleTransactionMessage(dbs *db.DataBase, m *protocols_p2p.GossipMessage) error {
 	lock.Lock()
 	defer lock.Unlock()
 
