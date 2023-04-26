@@ -1,5 +1,18 @@
 version: '2'
 services:
+  db:
+    image: "postgres:13-alpine"
+    network_mode: host
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+    - ./pg_db:/var/lib/postgresql/
+
   perp-relayer:
     build: .
     stdin_open: true
@@ -14,3 +27,7 @@ services:
     environment:
       - FILE_PATH=.
       - FILE_NAME=config.json
+    depends_on:
+      - db
+    network_mode: host
+

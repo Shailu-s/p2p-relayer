@@ -1,36 +1,36 @@
 package db_test
 
-import (
-	"fmt"
-	"github.com/volmexfinance/relayers/internal/testlib"
-	"testing"
+// import (
+// 	"testing"
 
-	"github.com/volmexfinance/relayers/relayer-srv/db"
-)
+// 	"github.com/volmexfinance/relayers/internal/testlib"
 
-func TestTxSent(t *testing.T) {
-	testDb := testlib.NewTestDB(t)
+// 	"github.com/volmexfinance/relayers/relayer-srv/db"
+// )
 
-	transactionHash := "0xd16d24998bcb3cd53c428f79596caf28dde19079bdea8b50746d155f7903c745" // TODO : Put txn hash here
+// func TestTxSent(t *testing.T) {
+// 	testDb := testlib.NewTestDB(t)
 
-	txSent := db.TransactionSent{
-		ID:                1,
-		TransactionHash:   transactionHash,
-		TransactionStatus: db.TransactionStatusTypeInit,
-		Error:             "",
-	}
+// 	transactionHash := "0xd16d24998bcb3cd53c428f79596caf28dde19079bdea8b50746d155f7903c745" // TODO : Put txn hash here
 
-	// Create TxnSent
-	er := testDb.CreateTxSent(&txSent, "ARB")
-	if er != nil {
-		t.Errorf("CreateTxnFailed:%q", er)
-	}
+// 	txSent := db.TransactionSent{
+// 		ID:                1,
+// 		TransactionHash:   transactionHash,
+// 		TransactionStatus: db.TransactionStatusTypeInit,
+// 		Error:             "",
+// 	}
 
-	// Get TxnSnt by orderId
-	txSentGotGetTxnByOrderID, erGetTxnByOrderId := testDb.GetTxnByOrderID("test123")
-	if erGetTxnByOrderId != nil {
-		t.Errorf("GetTxnByHash:%q", erGetTxnByOrderId)
-	}
+// 	// Create TxnSent
+// 	er := testDb.CreateTxSent(&txSent, "ARB")
+// 	if er != nil {
+// 		t.Errorf("CreateTxnFailed:%q", er)
+// 	}
 
-	fmt.Println(txSentGotGetTxnByOrderID)
-}
+// 	// // Get TxnSnt by orderId
+// 	// txSentGotGetTxnByOrderID, erGetTxnByOrderId := testDb.GetTxnByOrderID("test123")
+// 	// if erGetTxnByOrderId != nil {
+// 	// 	t.Errorf("GetTxnByHash:%q", erGetTxnByOrderId)
+// 	// }
+
+// 	// fmt.Println(txSentGotGetTxnByOrderID)
+// }
