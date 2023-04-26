@@ -17,6 +17,17 @@ func (db *PostgresDataBase) CreateTxSent(txn *TransactionSent, chainName string)
 	}
 }
 
+// CreateTxSent creates a transaction sent in DB
+func (db *SQLiteDataBase) CreateTxSent(txn *TransactionSent, chainName string) error {
+	txn.ChainName = chainName
+	txn.CreatedAt = time.Now().Unix()
+	if result := db.DB.Model(TransactionSent{}).Create(&txn); result.Error != nil {
+		return result.Error
+	} else {
+		return nil
+	}
+}
+
 // GetTxnByID finds and returns transaction sent with given ID from DB, error if not found
 func (db *PostgresDataBase) GetTxnByID(ID int64, chain string) (*TransactionSent, error) {
 	var txnSent TransactionSent
@@ -65,7 +76,7 @@ func (db *PostgresDataBase) FindSecondLastTxnSent(chain string) (*TransactionSen
 	if len(lastTx) > 1 {
 		return &lastTx[1], nil
 	}
-	return nil, fmt.Errorf("Unable to find second last txn")
+	return nil, fmt.Errorf("unable to find second last txn")
 }
 
 // HandleTxnSentByLeader creates or update given transaction sent on DB, only leader can use it
@@ -94,6 +105,16 @@ func (db *PostgresDataBase) HandleTxnSentByLeader(txn TransactionSent, leader st
 
 // UpdateTxnStatus updates transaction sent and its staus on DB
 func (db *PostgresDataBase) UpdateTxnStatus(txn *TransactionSent, newStatus TransactionStatusType) error {
+	txn.UpdatedAt = time.Now().Unix()
+	txn.TransactionStatus = newStatus
+	if result := db.DB.Save(&txn); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+// UpdateTxnStatus updates transaction sent and its staus on DB
+func (db *SQLiteDataBase) UpdateTxnStatus(txn *TransactionSent, newStatus TransactionStatusType) error {
 	txn.UpdatedAt = time.Now().Unix()
 	txn.TransactionStatus = newStatus
 	if result := db.DB.Save(&txn); result.Error != nil {

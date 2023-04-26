@@ -226,6 +226,30 @@ func (db *PostgresDataBase) UpdateOrderStatusByMinSalt(trader string, minSalt st
 	return query.Updates(toUpdate).Error
 }
 
+// UpdateOrderStatusByMinSalt updates order status with condition
+func (db *SQLiteDataBase) UpdateOrderStatusByMinSalt(trader string, minSalt string, inStatuses, notInStatuses []MatchedStatus, updateStatus MatchedStatus, chain string) error {
+	query := db.DB.
+		Model(Order{}).
+		Where(
+			"chain_name = ? AND trader = ? AND salt <= ?",
+			chain, trader, minSalt,
+		)
+
+	if len(inStatuses) != 0 {
+		query = query.Where("status in (?)", inStatuses)
+	}
+
+	if len(notInStatuses) != 0 {
+		query = query.Where("status not in (?)", notInStatuses)
+	}
+
+	toUpdate := map[string]interface{}{
+		"status":     updateStatus,
+		"updated_at": time.Now().Unix(),
+	}
+	return query.Updates(toUpdate).Error
+}
+
 // UpdateBatchOrderStatus updates status of order in batch
 // TODO: Don't use for loop to batch update order
 func (db *PostgresDataBase) UpdateBatchOrderStatus(newOrder []*Order, newStatus MatchedStatus) error {

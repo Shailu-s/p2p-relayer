@@ -177,10 +177,18 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", err)
 					continue
 				}
+				if ok := w.SQLiteDataBase.UpdateOrderStatus(orderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.Canceled); ok != nil {
+					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", err)
+					continue
+				}
 				w.Logger.Infof("Found canceledOrder event and handled successfully with orderID %s", orderID)
 			case "CanceledAll":
 				canceledAllOrder := event.(worker.MatchingEngineAbiCanceledAll)
 				if ok := w.PostgresDataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusBlocked, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed}, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusFullMatchConfirmed}, db.Canceled, w.Worker.ChainName); ok != nil {
+					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", ok)
+					continue
+				}
+				if ok := w.SQLiteDataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusBlocked, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed}, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusFullMatchConfirmed}, db.Canceled, w.Worker.ChainName); ok != nil {
 					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", ok)
 					continue
 				}
@@ -203,6 +211,12 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 		// Create TransactionLog
 		er := w.PostgresDataBase.CreateTransactionLog(&tLog)
 		if er != nil {
+			// wg.Done()
+			w.Logger.Infof("Error: %v\n", er)
+			continue
+		}
+		err := w.SQLiteDataBase.CreateTransactionLog(&tLog)
+		if err != nil {
 			// wg.Done()
 			w.Logger.Infof("Error: %v\n", er)
 			continue

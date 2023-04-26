@@ -35,6 +35,9 @@ func (r *RelayerSrv) SendToContract(orderLeft, orderRight []*db.Order, orderIDs 
 		if err := r.postgresDB.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
 			return nil, err
 		}
+		if err := r.sqlitedb.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
+			return nil, err
+		}
 		return &txSent, fmt.Errorf("SendToContract: %w", er)
 	}
 	r.logger.Infof("tx sent success for orderIDs: %s, txhash: %s", orderIDs, txHash)
@@ -45,6 +48,10 @@ func (r *RelayerSrv) SendToContract(orderLeft, orderRight []*db.Order, orderIDs 
 	}
 
 	if err := r.postgresDB.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
+		return nil, err
+	}
+
+	if err := r.sqlitedb.CreateTxSent(&txSent, wrkr.ChainName); err != nil {
 		return nil, err
 	}
 	return &txSent, nil

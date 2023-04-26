@@ -202,8 +202,16 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
 					}
+					if err := r.sqlitedb.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
+						r.logger.Warnf("UpdateOrderStatusById : %s", err)
+						continue
+					}
 				} else {
 					if err := r.postgresDB.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
+						r.logger.Warnf("UpdateOrderStatusById : %s", err)
+						continue
+					}
+					if err := r.sqlitedb.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
 					}
@@ -254,14 +262,26 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
+						if err := r.sqlitedb.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
+							r.logger.Warnf("UpdateOrderStatusById : %s", err)
+							continue
+						}
 
 					} else {
 						if err := r.postgresDB.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
+						if err := r.sqlitedb.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
+							r.logger.Warnf("UpdateOrderStatusById : %s", err)
+							continue
+						}
 					}
 					if err := r.postgresDB.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
+						r.logger.Warnf("UpdateTxnStatus : %s", err)
+						continue
+					}
+					if err := r.sqlitedb.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateTxnStatus : %s", err)
 						continue
 					}
