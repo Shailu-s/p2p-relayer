@@ -1,14 +1,14 @@
 package app
 
 import (
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"reflect"
 	"testing"
 )
 
 func TestToDBOrder(t *testing.T) {
 	newOrder := reqOrder{ // TODO : fill values
-		OrderType: "0xf555eb98",
+		OrderType: string(models.OrderTypeOrder),
 		Deadline:  "87654321987654",
 		Trader:    "0x401f0B1c51A7048D3dB9A8ca4E9a370e563E0Fb9",
 		MakeAsset: reqAsset{
@@ -22,10 +22,10 @@ func TestToDBOrder(t *testing.T) {
 		Salt:         "44",
 		TriggerPrice: "0",
 		IsShort:      false,
-		Signature:    "",
+		Signature:    "0x0c5Dee14c17afa5Faa56Ba39235445cAED19a90",
 	}
 
-	dbOrderWant := &db.Order{}
+	dbOrderWant := &models.Order{}
 	dbOrderGot, err := toDBOrder(newOrder, "")
 	if err != nil {
 		t.Errorf("toDBOrder failed with error :%q", err)

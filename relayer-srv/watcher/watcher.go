@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"errors"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"math/big"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/sirupsen/logrus"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
 	"gorm.io/gorm"
@@ -55,7 +56,7 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 	// ticker := time.NewTicker(1 * time.Minute)
 	// defer ticker.Stop()
 	for {
-		var tLog db.TransactionLog
+		var tLog models.TransactionLog
 
 		select {
 		// case <-ticker.C:
@@ -106,7 +107,7 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 
 				tLog.NewLeftFill = MatchingEngineOrdersFilled.Fills[0].String()
 				tLog.NewRightFill = MatchingEngineOrdersFilled.Fills[1].String()
-				tLog.Status = db.TransactionLogStatusTypeConfirmed
+				tLog.Status = models.TransactionLogStatusTypeConfirmed
 
 				// Get order IDs
 				orderId1, orderId2 := utils.GetOrderIdsFromTLog(&tLog, w.Worker.ChainName)
@@ -142,13 +143,13 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 						continue
 					}
 					if assetValue.Cmp(newFill) <= 0 {
-						erOrder := w.DataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
+						erOrder := w.DataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusFullMatchConfirmed)
 						if erOrder != nil {
 							w.Logger.Warnf("getSubscribedEventLog :%v", err)
 							continue
 						}
 					} else {
-						erOrder := w.DataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusPartialMatchConfirmed)
+						erOrder := w.DataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []models.MatchedStatus{}, []models.MatchedStatus{}, models.MatchedStatusPartialMatchConfirmed)
 						if erOrder != nil {
 							w.Logger.Warnf("getSubscribedEventLog :%v", err)
 							continue
@@ -159,16 +160,16 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 			case "Canceled":
 				canceledOrder := event.(worker.MatchingEngineAbiCanceled)
 
-				orderID := db.CreateOrderID(canceledOrder.Trader.String(), canceledOrder.Salt.String(), w.Worker.ChainName)
+				orderID := models.CreateOrderID(canceledOrder.Trader.String(), canceledOrder.Salt.String(), w.Worker.ChainName)
 
-				if ok := w.DataBase.UpdateOrderStatus(orderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.Canceled); ok != nil {
+				if ok := w.DataBase.UpdateOrderStatus(orderID, []models.MatchedStatus{}, []models.MatchedStatus{}, models.Canceled); ok != nil {
 					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", err)
 					continue
 				}
 				w.Logger.Infof("Found canceledOrder event and handled successfully with orderID %s", orderID)
 			case "CanceledAll":
 				canceledAllOrder := event.(worker.MatchingEngineAbiCanceledAll)
-				if ok := w.DataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusBlocked, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed}, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusFullMatchConfirmed}, db.Canceled, w.Worker.ChainName); ok != nil {
+				if ok := w.DataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []models.MatchedStatus{models.MatchedStatusInit, models.MatchedStatusBlocked, models.MatchedStatusFailedConfirmed, models.MatchedStatusFullMatchFound, models.MatchedStatusPartialMatchFound, models.MatchedStatusPartialMatchConfirmed, models.MatchedStatusSentFailed}, []models.MatchedStatus{models.MatchedStatusValidated, models.MatchedStatusValidationConfirmed, models.MatchedStatusSentToContract, models.MatchedStatusFullMatchConfirmed}, models.Canceled, w.Worker.ChainName); ok != nil {
 					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", ok)
 					continue
 				}

@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/volmexfinance/relayers/internal/testlib"
 	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"testing"
 )
 
@@ -17,9 +17,10 @@ func fakeAnyValueDbAsset(token string) testlib.FakeDbAssetFn {
 }
 
 // fakeBuyOrder returns a fake buy order with the given price, make asset, take asset, and fills.
-func fakeBuyOrder(price float64, makeAssetFn, takeAssetFn testlib.FakeDbAssetFn, fills int64) *db.Order {
+func fakeBuyOrder(price float64, makeAssetFn, takeAssetFn testlib.FakeDbAssetFn, fills int64) *models.Order {
 	return testlib.FakeDbOrder(
 		false,
+		testlib.WithOrderType(models.OrderTypeOrder),
 		testlib.WithPrice(price),
 		testlib.WithAssets(makeAssetFn, takeAssetFn),
 		testlib.WithFills(fills),
@@ -27,9 +28,10 @@ func fakeBuyOrder(price float64, makeAssetFn, takeAssetFn testlib.FakeDbAssetFn,
 }
 
 // fakeSellOrder returns a fake sell order with the given price, make asset, take asset, and fills.
-func fakeSellOrder(price float64, makeAssetFn, takeAssetFn testlib.FakeDbAssetFn, fills int64) *db.Order {
+func fakeSellOrder(price float64, makeAssetFn, takeAssetFn testlib.FakeDbAssetFn, fills int64) *models.Order {
 	return testlib.FakeDbOrder(
 		true,
+		testlib.WithOrderType(models.OrderTypeOrder),
 		testlib.WithPrice(price),
 		testlib.WithAssets(makeAssetFn, takeAssetFn),
 		testlib.WithFills(fills),
@@ -40,7 +42,7 @@ func TestAggregateOrderDepthDetails_bidOrders(t *testing.T) {
 	/// Given
 	// Base token = EVIV
 	// Quote token = USDT
-	orderDetails := []*db.Order{
+	orderDetails := []*models.Order{
 		fakeBuyOrder(30.000, fakeDbAsset("USDT", 20), fakeAnyValueDbAsset("EVIV"), 0),
 		fakeBuyOrder(30.001, fakeDbAsset("USDT", 40), fakeAnyValueDbAsset("EVIV"), 20),
 		fakeBuyOrder(40.000, fakeDbAsset("USDT", 60), fakeAnyValueDbAsset("EVIV"), 20),
@@ -64,7 +66,7 @@ func TestAggregateOrderDepthDetails_askOrders(t *testing.T) {
 	/// Given
 	// Base token = EVIV
 	// Quote token = USDT
-	orderDetails := []*db.Order{
+	orderDetails := []*models.Order{
 		fakeSellOrder(10.000, fakeDbAsset("EVIV", 10), fakeAnyValueDbAsset("USDT"), 0),
 		fakeSellOrder(10.001, fakeDbAsset("EVIV", 30), fakeAnyValueDbAsset("USDT"), 20),
 		fakeSellOrder(20.000, fakeDbAsset("EVIV", 60), fakeAnyValueDbAsset("USDT"), 20),
@@ -93,7 +95,7 @@ func TestAggregateOrderDepthDetails_priceRounding(t *testing.T) {
 	/// Given
 	// Base token = EVIV
 	// Quote token = USDT
-	orderDetails := []*db.Order{
+	orderDetails := []*models.Order{
 		fakeBuyOrder(50.005, fakeDbAsset("USDT", 10), fakeAnyValueDbAsset("EVIV"), 0),
 		fakeSellOrder(50.004, fakeDbAsset("EVIV", 30), fakeAnyValueDbAsset("USDT"), 0),
 	}

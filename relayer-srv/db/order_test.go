@@ -5,42 +5,42 @@ import (
 	"github.com/volmexfinance/relayers/internal/testlib"
 	"testing"
 
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 )
 
 func TestOrder(t *testing.T) {
-	var order = db.Order{
+	var order = models.Order{
 		OrderType:    "0xf555eb98",
 		Trader:       "0x401f0B1c51A7048D3dB9A8ca4E9a370e563E0Fb9",
 		Deadline:     87654321987654,
-		Assets:       []db.Assets{{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}, {VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}},
+		Assets:       []models.Assets{{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}, {VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}},
 		Price:        1,
 		Salt:         "44",
 		TriggerPrice: "0",
 		Sign:         "",
 		IsShort:      false,
-		Status:       db.MatchedStatusInit,
+		Status:       models.MatchedStatusInit,
 		ChainName:    "ETH",
 	}
 
-	var order2 = db.Order{
+	var order2 = models.Order{
 		OrderType:    "0xf555eb98",
 		Trader:       "0x74bC67ed6948f0a4C387C353975F142Dc640537a",
 		Deadline:     87654321987654,
-		Assets:       []db.Assets{{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}, {VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}},
+		Assets:       []models.Assets{{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}, {VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}},
 		Price:        1,
 		Salt:         "45",
 		TriggerPrice: "0",
 		Sign:         "",
 		IsShort:      false,
-		Status:       db.MatchedStatusInit,
+		Status:       models.MatchedStatusInit,
 		ChainName:    "ETH",
 	}
 
 	testDb := testlib.NewTestDB(t)
 
-	order.OrderID = db.CreateOrderID(order.Trader, order.Salt, order.ChainName)
-	order2.OrderID = db.CreateOrderID(order2.Trader, order2.Salt, order2.ChainName)
+	order.OrderID = models.CreateOrderID(order.Trader, order.Salt, order.ChainName)
+	order2.OrderID = models.CreateOrderID(order2.Trader, order2.Salt, order2.ChainName)
 
 	er := testDb.CreateOrder(&order)
 	if er != nil {
@@ -52,7 +52,7 @@ func TestOrder(t *testing.T) {
 		t.Errorf("Failed to create order%q", er)
 	}
 
-	var txnLog = db.TransactionLog{
+	var txnLog = models.TransactionLog{
 		Traders:         []string{"", ""},
 		NewLeftFill:     "1000000000",
 		NewRightFill:    "200000000000",
@@ -61,7 +61,7 @@ func TestOrder(t *testing.T) {
 		TransactionHash: "sshshs",
 	}
 
-	var txnLog2 = db.TransactionLog{
+	var txnLog2 = models.TransactionLog{
 		Traders:         []string{"", ""},
 		NewLeftFill:     "3000000000",
 		NewRightFill:    "400000000000",
@@ -80,7 +80,7 @@ func TestOrder(t *testing.T) {
 		t.Errorf("Failed to create order%q", er)
 	}
 
-	err = testDb.UpdateFillAndStatusByTxnLog([]*db.Order{&order, &order2}, db.MatchedStatusSentFailed)
+	err = testDb.UpdateFillAndStatusByTxnLog([]*models.Order{&order, &order2}, models.MatchedStatusSentFailed)
 	if err != nil {
 		t.Errorf("Failed to create order%q", er)
 	}

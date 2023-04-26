@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"math"
 	"math/big"
 	"net/http"
@@ -23,7 +23,7 @@ func roundWithDecimals(value float64, decimals int) float64 {
 	return math.Round(value*pow) / pow
 }
 
-func aggregateOrderDepthDetails(orderDetails []*db.Order) (map[float64]*big.Float, []float64, map[float64]*big.Float, []float64) {
+func aggregateOrderDepthDetails(orderDetails []*models.Order) (map[float64]*big.Float, []float64, map[float64]*big.Float, []float64) {
 	var bidTokens = make(map[float64]*big.Float)
 	var keyBidTokens = make([]float64, 0, len(bidTokens))
 	var askTokens = make(map[float64]*big.Float)

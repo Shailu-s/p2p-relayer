@@ -2,16 +2,16 @@ package testlib
 
 import (
 	"github.com/go-faker/faker/v4"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"math/big"
 )
 
-type FakeDbOrderModifierFn func(order *db.Order)
-type FakeDbAssetFn func() db.Assets
+type FakeDbOrderModifierFn func(order *models.Order)
+type FakeDbAssetFn func() models.Assets
 
 func RandomDbAsset() FakeDbAssetFn {
-	return func() db.Assets {
-		var asset db.Assets
+	return func() models.Assets {
+		var asset models.Assets
 		if err := faker.FakeData(&asset); err != nil {
 			panic(err)
 		}
@@ -32,8 +32,8 @@ func RandomDbAsset() FakeDbAssetFn {
 }
 
 func FakeAnyValueDbAsset(token string) FakeDbAssetFn {
-	return func() db.Assets {
-		var asset db.Assets
+	return func() models.Assets {
+		var asset models.Assets
 		if err := faker.FakeData(&asset); err != nil {
 			panic(err)
 		}
@@ -53,8 +53,8 @@ func FakeAnyValueDbAsset(token string) FakeDbAssetFn {
 }
 
 func FakeDbAsset(token string, value uint64) FakeDbAssetFn {
-	return func() db.Assets {
-		var asset db.Assets
+	return func() models.Assets {
+		var asset models.Assets
 		if err := faker.FakeData(&asset); err != nil {
 			panic(err)
 		}
@@ -66,32 +66,38 @@ func FakeDbAsset(token string, value uint64) FakeDbAssetFn {
 	}
 }
 
+func WithOrderType(orderType models.OrderType) FakeDbOrderModifierFn {
+	return func(order *models.Order) {
+		order.OrderType = orderType
+	}
+}
+
 func WithAssets(makeAsset, takeAsset FakeDbAssetFn) FakeDbOrderModifierFn {
-	return func(order *db.Order) {
-		order.Assets = []db.Assets{makeAsset(), takeAsset()}
+	return func(order *models.Order) {
+		order.Assets = []models.Assets{makeAsset(), takeAsset()}
 	}
 }
 
 func WithPrice(price float64) FakeDbOrderModifierFn {
-	return func(order *db.Order) {
+	return func(order *models.Order) {
 		order.Price = price
 	}
 }
 
 func WithFills(fills int64) FakeDbOrderModifierFn {
-	return func(order *db.Order) {
+	return func(order *models.Order) {
 		order.Fills = big.NewInt(fills).String()
 	}
 }
 
-func WithStatus(status db.MatchedStatus) FakeDbOrderModifierFn {
-	return func(order *db.Order) {
+func WithStatus(status models.MatchedStatus) FakeDbOrderModifierFn {
+	return func(order *models.Order) {
 		order.Status = status
 	}
 }
 
-func FakeDbOrder(isShort bool, modifiers ...FakeDbOrderModifierFn) *db.Order {
-	var order *db.Order
+func FakeDbOrder(isShort bool, modifiers ...FakeDbOrderModifierFn) *models.Order {
+	var order *models.Order
 	if err := faker.FakeData(&order); err != nil {
 		panic(err)
 	}

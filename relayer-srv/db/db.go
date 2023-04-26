@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gorm_logger "gorm.io/gorm/logger"
@@ -33,7 +34,7 @@ func NewDataBase(logger *logrus.Logger, config Config) (*DataBase, error) {
 
 // InitialMigration initialises the SQLite database schema
 func (db *DataBase) InitialMigration() error {
-	if err := db.DB.AutoMigrate(&Order{}, &Assets{}, &TransactionSent{}, &TransactionLog{}); err != nil {
+	if err := db.DB.AutoMigrate(&models.Order{}, &models.Assets{}, &models.TransactionSent{}, &models.TransactionLog{}); err != nil {
 		return err
 	}
 

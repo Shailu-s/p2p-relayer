@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"reflect"
 	"testing"
 
@@ -9,16 +10,15 @@ import (
 	periphery "github.com/volmexfinance/relayers/relayer-srv/worker/abi/periphery"
 
 	protocols_p2p "github.com/volmexfinance/relayers/relayer-srv/chat"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
 )
 
 func TestOrderToLibOrder(t *testing.T) {
 	// Given
-	newOrder := db.Order{
+	newOrder := models.Order{
 		OrderType: "0xf555eb98",
 		Trader:    "0x401f0B1c51A7048D3dB9A8ca4E9a370e563E0Fb9",
 		Deadline:  87654321987654,
-		Assets: []db.Assets{
+		Assets: []models.Assets{
 			{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"},
 			{VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"},
 		},
@@ -27,7 +27,7 @@ func TestOrderToLibOrder(t *testing.T) {
 		TriggerPrice: "0",
 		Sign:         "",
 		IsShort:      false,
-		Status:       db.MatchedStatusInit,
+		Status:       models.MatchedStatusInit,
 	}
 
 	expectedType := reflect.TypeOf(periphery.LibOrderOrder{})
@@ -57,7 +57,7 @@ func TestP2POrderToDBOrder(t *testing.T) {
 		Fills:                  "",
 	}
 
-	DBOrderWant := &db.Order{}
+	DBOrderWant := &models.Order{}
 	DBOrderGot, err := P2POrderToDBOrder(&newOrder, "")
 	if err != nil {
 		t.Errorf("got error %v on converting p2p order to db order", err)
@@ -70,33 +70,33 @@ func TestP2POrderToDBOrder(t *testing.T) {
 
 func TestEncodePositionContractData(t *testing.T) {
 
-	order1 := db.Order{
+	order1 := models.Order{
 		OrderType:    "0xf555eb98",
 		Trader:       "0x401f0B1c51A7048D3dB9A8ca4E9a370e563E0Fb9",
 		Deadline:     87654321987654,
-		Assets:       []db.Assets{{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}, {VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}},
+		Assets:       []models.Assets{{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}, {VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}},
 		Price:        1,
 		Salt:         "44",
 		TriggerPrice: "0",
 		Sign:         "",
 		IsShort:      false,
-		Status:       db.MatchedStatusInit,
+		Status:       models.MatchedStatusInit,
 	}
-	order2 := db.Order{
+	order2 := models.Order{
 		OrderType:    "0xf555eb98",
 		Trader:       "0x77a18F00CE53c004337b4A8b7A9a585AFFDEeD5e",
 		Deadline:     87654321987654,
-		Assets:       []db.Assets{{VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}, {VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}},
+		Assets:       []models.Assets{{VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"}, {VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"}},
 		Price:        1,
 		Salt:         "44",
 		TriggerPrice: "0",
 		Sign:         "",
 		IsShort:      true,
-		Status:       db.MatchedStatusInit,
+		Status:       models.MatchedStatusInit,
 	}
 
 	positionContractAdd := "" // TODO: put contract address
-	_, er := EncodePeripheryContractData([]*db.Order{&order1}, []*db.Order{&order2}, positionContractAdd)
+	_, er := EncodePeripheryContractData([]*models.Order{&order1}, []*models.Order{&order2}, positionContractAdd)
 	if er != nil {
 		t.Errorf("Failed to Encode order")
 	}
@@ -104,11 +104,11 @@ func TestEncodePositionContractData(t *testing.T) {
 
 func TestEncodeOrderStruct(t *testing.T) {
 	// Given
-	order1 := db.Order{
-		OrderType: "0xf555eb98",
+	order1 := models.Order{
+		OrderType: models.OrderTypeOrder,
 		Trader:    "0x401f0B1c51A7048D3dB9A8ca4E9a370e563E0Fb9",
 		Deadline:  87654321987654,
-		Assets: []db.Assets{
+		Assets: []models.Assets{
 			{VirtualToken: "0xb866E40cA0C89c5E7feC0E102B2f371d7602bc9d", Value: "2000000000000000000"},
 			{VirtualToken: "0x5a0cB5D14c17a5Faa5655Ba39235445cAED19a90", Value: "2000000000000000000"},
 		},
@@ -117,7 +117,7 @@ func TestEncodeOrderStruct(t *testing.T) {
 		TriggerPrice: "0",
 		Sign:         "",
 		IsShort:      false,
-		Status:       db.MatchedStatusInit,
+		Status:       models.MatchedStatusInit,
 	}
 
 	// Test vector from: https://eips.ethereum.org/EIPS/eip-712
@@ -134,7 +134,7 @@ func TestEncodeOrderStruct(t *testing.T) {
 func TestGetOrderIdsFromTLog(t *testing.T) {
 	// Given
 
-	tLog := db.TransactionLog{ // TODO : put values here
+	tLog := models.TransactionLog{ // TODO : put values here
 		Traders: []string{"0x401f0B1c51A7048D3dB9A8ca4E9a370e563E0Fb9", "0x77a18F00CE53c004337b4A8b7A9a585AFFDEeD5e"},
 		Salt:    []string{"44", "44"},
 	}

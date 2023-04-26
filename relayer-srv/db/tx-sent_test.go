@@ -3,9 +3,8 @@ package db_test
 import (
 	"fmt"
 	"github.com/volmexfinance/relayers/internal/testlib"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"testing"
-
-	"github.com/volmexfinance/relayers/relayer-srv/db"
 )
 
 func TestTxSent(t *testing.T) {
@@ -13,10 +12,10 @@ func TestTxSent(t *testing.T) {
 
 	transactionHash := "0xd16d24998bcb3cd53c428f79596caf28dde19079bdea8b50746d155f7903c745" // TODO : Put txn hash here
 
-	txSent := db.TransactionSent{
+	txSent := models.TransactionSent{
 		ID:                1,
 		TransactionHash:   transactionHash,
-		TransactionStatus: db.TransactionStatusTypeInit,
+		TransactionStatus: models.TransactionStatusTypeInit,
 		Error:             "",
 	}
 

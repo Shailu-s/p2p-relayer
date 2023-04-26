@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 	"github.com/volmexfinance/relayers/relayer-srv/validation"
 	"math/big"
 	"net/http"
@@ -31,50 +31,56 @@ type reqOrder struct {
 	Signature    string   `json:"signature"`
 }
 
-func checkReqOrder(req reqOrder) error {
-	if req.Signature == "" {
-		return errors.New("missing signature")
+// toDBAssets validates and converts an order asset received via REST API to the data model used in DB.
+func toDbAssets(reqAsset reqAsset) (models.Assets, error) {
+	var dbAssets models.Assets
+	if reqAsset.VirtualToken == "" {
+		return dbAssets, errors.New("empty virtual token")
 	}
 
-	if req.Salt == "" {
-		return errors.New("invalid salt")
+	if reqAsset.Value == "" {
+		return dbAssets, errors.New("empty value")
 	}
 
-	if req.Trader == "" {
-		return errors.New("invalid trader")
+	value, err := big_ext.CheckAndParseBigFloat(reqAsset.Value)
+	if err != nil {
+		return dbAssets, err
 	}
 
-	if req.MakeAsset.VirtualToken == "" {
-		return errors.New("invalid make asset virtual token")
+	if big_ext.FloatLessThanOrEqual(value, big.NewFloat(0)) {
+		return dbAssets, errors.New("value must be greater than 0")
 	}
 
-	if req.TakeAsset.VirtualToken == "" {
-		return errors.New("invalid take asset virtual token")
+	dbAssets = models.Assets{
+		VirtualToken: reqAsset.VirtualToken,
+		Value:        reqAsset.Value,
 	}
-
-	if req.MakeAsset.Value == "" {
-		return errors.New("invalid make asset value")
-	}
-
-	if req.TakeAsset.Value == "" {
-		return errors.New("invalid take asset value")
-	}
-
-	return nil
-}
-
-// toDBAssets converts an order asset received via REST API to the data model used in DB.
-func toDbAssets(assets reqAsset) db.Assets {
-	return db.Assets{
-		VirtualToken: assets.VirtualToken,
-		Value:        assets.Value,
-	}
+	return dbAssets, nil
 }
 
 // toDBOrder converts an order received via REST API to the data model used in DB.
-func toDBOrder(req reqOrder, chain string) (*db.Order, error) {
+func toDBOrder(req reqOrder, chain string) (*models.Order, error) {
+	// check and parse request signature
+	if req.Signature == "" {
+		return nil, errors.New("missing signature")
+	}
+
+	// check and parse request trader
+	if req.Trader == "" {
+		return nil, errors.New("invalid trader")
+	}
+
+	// check and parse request order type
+	orderType, err := models.CheckAndParseOrderType(req.OrderType)
+	if err != nil {
+		return nil, fmt.Errorf("invalid order type: %w", err)
+	}
 
 	// check and parse request order salt
+	if req.Salt == "" {
+		return nil, errors.New("invalid salt")
+	}
+
 	salt, err := big_ext.CheckAndParseBigInt(req.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("invalid salt: %w", err)
@@ -84,29 +90,19 @@ func toDBOrder(req reqOrder, chain string) (*db.Order, error) {
 		return nil, errors.New("invalid salt: must be greater than 0")
 	}
 
-	// check take and make asset virtual tokens are not the same
+	// check and parse take and make assets
 	if req.TakeAsset.VirtualToken == req.MakeAsset.VirtualToken {
 		return nil, errors.New("make and take asset virtual tokens are the same")
 	}
 
-	// check and parse request order make asset
-	makeValue, err := big_ext.CheckAndParseBigFloat(req.MakeAsset.Value)
+	orderMakeAsset, err := toDbAssets(req.MakeAsset)
 	if err != nil {
-		return nil, fmt.Errorf("invalid make asset value: %w", err)
+		return nil, fmt.Errorf("invalid make asset: %w", err)
 	}
 
-	if big_ext.FloatLessThanOrEqual(makeValue, big.NewFloat(0)) {
-		return nil, errors.New("invalid make asset value: must be greater than 0")
-	}
-
-	// check and parse request order take asset
-	takeValue, err := big_ext.CheckAndParseBigFloat(req.TakeAsset.Value)
+	orderTakeAsset, err := toDbAssets(req.TakeAsset)
 	if err != nil {
-		return nil, fmt.Errorf("invalid take asset value: %w", err)
-	}
-
-	if big_ext.FloatLessThanOrEqual(takeValue, big.NewFloat(0)) {
-		return nil, errors.New("invalid take asset value: must be greater than 0")
+		return nil, fmt.Errorf("invalid take asset: %w", err)
 	}
 
 	// check and parse request order deadline
@@ -116,14 +112,11 @@ func toDBOrder(req reqOrder, chain string) (*db.Order, error) {
 	}
 
 	// Map request order to DB order
-	orderMakeAsset := toDbAssets(req.MakeAsset)
-	orderTakeAsset := toDbAssets(req.TakeAsset)
-
-	order := db.NewOrder(
+	order := models.NewOrder(
 		req.Trader,
 		req.Salt,
 		chain,
-		req.OrderType,
+		orderType,
 		req.TriggerPrice,
 		req.Signature,
 		deadline,
@@ -158,12 +151,6 @@ func (a *App) ordersPostHandler(w http.ResponseWriter, r *http.Request) {
 	var order reqOrder
 	if err := json.NewDecoder(body).Decode(&order); err != nil {
 		a.logger.Errorf("cannot decode request's JSON body: %v", err)
-		responError(w, http.StatusBadRequest, "")
-		return
-	}
-
-	if err := checkReqOrder(order); err != nil {
-		a.logger.Errorf("bad insert order request: %s", err.Error())
 		responError(w, http.StatusBadRequest, "")
 		return
 	}

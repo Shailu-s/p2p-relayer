@@ -6,10 +6,10 @@ import (
 	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 	"math/big"
 
-	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/db/models"
 )
 
-func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
+func matchAndUpdateOrders(orderLeft, orderRight *models.Order) error {
 	orderLeftFill := orderLeft.OrderFills()
 	orderRightFill := orderRight.OrderFills()
 
@@ -36,20 +36,20 @@ func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 	return nil
 }
 
-func updateOrderFillValue(order *db.Order, newFill *big.Int) {
+func updateOrderFillValue(order *models.Order, newFill *big.Int) {
 	currentFill := order.OrderFills()
 	currentFill = currentFill.Add(currentFill, newFill)
 	order.SetOrderFills(currentFill)
 }
 
-func updateOrderStatus(order *db.Order) error {
+func updateOrderStatus(order *models.Order) error {
 	makeAsset := order.MakeAsset().ValueAsBigInt()
 	fills := order.OrderFills()
 
 	if big_ext.Equals(fills, makeAsset) {
-		order.Status = db.MatchedStatusFullMatchFound
+		order.Status = models.MatchedStatusFullMatchFound
 	} else if big_ext.LessThanOrEqual(fills, makeAsset) {
-		order.Status = db.MatchedStatusPartialMatchFound
+		order.Status = models.MatchedStatusPartialMatchFound
 	} else {
 		return fmt.Errorf("order fill is greater than make asset")
 	}
@@ -57,7 +57,7 @@ func updateOrderStatus(order *db.Order) error {
 	return nil
 }
 
-func fillOrder(leftOrder, rightOrder *db.Order, leftOrderFill, rightOrderFill *big.Int) (*big.Int, *big.Int, error) {
+func fillOrder(leftOrder, rightOrder *models.Order, leftOrderFill, rightOrderFill *big.Int) (*big.Int, *big.Int, error) {
 	leftBaseValue, leftQuoteValue, err := calculateRemaining(leftOrder, leftOrderFill)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fillOrder: unable to calculate remaining fill %w", err)
@@ -100,7 +100,7 @@ func fillOrder(leftOrder, rightOrder *db.Order, leftOrderFill, rightOrderFill *b
 	}
 }
 
-func calculateRemaining(order *db.Order, fill *big.Int) (*big.Int, *big.Int, error) {
+func calculateRemaining(order *models.Order, fill *big.Int) (*big.Int, *big.Int, error) {
 	makeValue := order.MakeAsset().ValueAsBigInt()
 	takeValue := order.TakeAsset().ValueAsBigInt()
 
