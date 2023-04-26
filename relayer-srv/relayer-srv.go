@@ -8,7 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/volmexfinance/relayers/relayer-srv/db"
 	matching_engine "github.com/volmexfinance/relayers/relayer-srv/matching-engine"
-	postgresDB "github.com/volmexfinance/relayers/relayer-srv/postgresDB"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
 
 	"github.com/volmexfinance/relayers/relayer-srv/p2p"
@@ -33,8 +32,8 @@ type NodeDetails struct {
 type RelayerSrv struct {
 	ctx            context.Context
 	logger         *logrus.Entry
-	db             *db.DataBase
-	postgresDB     *postgresDB.PostgresDataBase
+	sqlitedb       *db.SQLiteDataBase
+	postgresDB     *db.PostgresDataBase
 	matchingCfg    MatchingConfig
 	workers        map[string]*worker.Worker
 	watcher        map[string]*watcher.WatcherSRV
@@ -42,19 +41,24 @@ type RelayerSrv struct {
 }
 
 // /TODO: Leader handling should be done by DB queries
-func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbConfig db.Config, wrkrCfg []worker.WorkerConfig, p2pCfg p2p.Config, matchingCfg MatchingConfig, nodeDetails NodeDetails) *RelayerSrv {
+func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbConfig db.Config, dbUrl string, wrkrCfg []worker.WorkerConfig, p2pCfg p2p.Config, matchingCfg MatchingConfig, nodeDetails NodeDetails) *RelayerSrv {
 
-	dbConn, err := db.NewDataBase(logger, dbConfig)
+	pgDbConn, err := db.InitialMigration(dbUrl, *logger)
 	if err != nil {
 		logger.Panicf("Unable to create db connection: %v", err)
 	}
 
-	err = dbConn.InitialMigration()
+	sqliteDBConn, err := db.NewDataBase(logger, dbConfig)
+	if err != nil {
+		logger.Panicf("Unable to create db connection: %v", err)
+	}
+
+	err = sqliteDBConn.SQLiteInitialMigration()
 	if err != nil {
 		logger.Warnf("Unable to run migration: %v", err)
 	}
 
-	//TODO: Create compose for postgresDB
+	// //TODO: Create compose for postgresDB
 	// postgresDB, err := postgresDB.InitialMigration(dbUrl)
 	// if err != nil {
 	// 	logger.Warnf("Unable to run migration: %s", err)
@@ -64,7 +68,7 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbC
 	gnosisOwnerRes := make(chan *watcher.GnosisChannel)
 	guardianSetMapping := make(map[string][]p2p.GuardianInfo)
 	for _, cfg := range wrkrCfg {
-		workers[cfg.ChainName] = worker.NewWorker(logger, cfg, nodeDetails.PrivateKey, dbConn)
+		workers[cfg.ChainName] = worker.NewWorker(logger, cfg, nodeDetails.PrivateKey, pgDbConn)
 		wrkr := workers[cfg.ChainName]
 		owners, err := wrkr.GetGnosisOwners()
 		if err != nil {
@@ -80,7 +84,7 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbC
 			logger.Panicf("Unable to get gnosis owners: %v", err)
 		}
 		wrkr.Threshold = threshold.Int64()
-		watcherService, err := watcher.NewWatcherSRV(wrkr, dbConn, logger, gnosisOwnerRes, cfg.ChainName)
+		watcherService, err := watcher.NewWatcherSRV(wrkr, pgDbConn, sqliteDBConn, logger, gnosisOwnerRes, cfg.ChainName)
 		if err != nil {
 			logger.Warnf("Failed to create watcher srv: %v", err)
 		}
@@ -89,8 +93,8 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbUrl string, dbC
 	inst := &RelayerSrv{
 		ctx:         ctx,
 		logger:      logger.WithField("layer", "relayer"),
-		db:          dbConn,
-		postgresDB:  nil,
+		sqlitedb:    sqliteDBConn,
+		postgresDB:  pgDbConn,
 		workers:     workers,
 		matchingCfg: matchingCfg,
 		watcher:     watchers,
@@ -133,20 +137,25 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 	//TODO: error handling
 	for {
 		//TODO: to be changed to batch again
-		orders, err := r.db.GetZeroOrders(wrkr.ChainName)
+		orders, err := r.postgresDB.GetZeroOrders(wrkr.ChainName)
 		if err != nil {
 			r.logger.Warnf("Not any new order found in DB %v", err)
 			continue
 		}
 		if len(orders) != 0 {
-			err = r.db.UpdateBatchOrderStatus(orders, db.MatchedStatusInit)
+			err = r.postgresDB.UpdateBatchOrderStatus(orders, db.MatchedStatusInit)
 			if err != nil {
 				r.logger.Errorf("Run: Found error in update %s", err.Error())
+			}
+			err = r.sqlitedb.CreateOrderInBatch(orders)
+			if err != nil {
+				time.Sleep(TimeOut)
+				continue
 			}
 		}
 		time.Sleep(TimeOut)
 		//TODO: to be changed to batch again
-		order1, order2, orderIDs, err := matching_engine.MatchBatchDBOrders(r.db, wrkr, r.matchingCfg.MaxFailAllowed)
+		order1, order2, orderIDs, err := matching_engine.MatchBatchDBOrders(r.sqlitedb, wrkr, r.matchingCfg.MaxFailAllowed)
 		if err != nil {
 			continue
 		}
@@ -169,6 +178,11 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 		if err != nil {
 			r.logger.Errorf("Error in MatchAndSendToP2P: SendToContract%s", err.Error())
 		}
+		// order1 = append(order1, order2...)
+		// if err := r.sqlitedb.UpdateBatchOrderStatus(order1, db.MatchedStatusSentToContract); err != nil {
+		// 	r.logger.Errorf("Error in MatchAndSendToP2P: UpdateBatchOrderStatus%s", err.Error())
+		// }
+
 		time.Sleep(TimeOut)
 		continue
 	}
@@ -177,7 +191,7 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 // TODO: Handle lost and not found transaction/// if not found, then check if txn after that is success or failed, then convert not found to lost,
 func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 	for {
-		orders, err := r.db.GetOrdersOnStatus(wrkr.ChainName, []db.MatchedStatus{db.MatchedStatusSentFailed})
+		orders, err := r.postgresDB.GetOrdersOnStatus(wrkr.ChainName, []db.MatchedStatus{db.MatchedStatusSentFailed})
 		if err != nil {
 			r.logger.Warnf("Unable to get MatchedStatusSentFailed: %v", err)
 			time.Sleep(10 * time.Second)
@@ -185,19 +199,27 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 		if len(orders) > 0 {
 			for _, order := range orders {
 				if _, err := wrkr.OrderValidation(*order); err != nil {
-					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
+					if err := r.postgresDB.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
+						r.logger.Warnf("UpdateOrderStatusById : %s", err)
+						continue
+					}
+					if err := r.sqlitedb.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
 					}
 				} else {
-					if err := r.db.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
+					if err := r.postgresDB.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
+						r.logger.Warnf("UpdateOrderStatusById : %s", err)
+						continue
+					}
+					if err := r.sqlitedb.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
 					}
 				}
 			}
 		}
-		txns, err := r.db.GetTxnsOnStatus([]db.TransactionStatusType{db.TransactionStatusTypeNotFound, db.TransactionStatusTypeFailed}, wrkr.ChainName)
+		txns, err := r.postgresDB.GetTxnsOnStatus([]db.TransactionStatusType{db.TransactionStatusTypeNotFound, db.TransactionStatusTypeFailed}, wrkr.ChainName)
 		if err != nil {
 			r.logger.Warnf("Unable to get any not found transaction: %v", err)
 			time.Sleep(10 * time.Second)
@@ -229,31 +251,45 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 				// }
 			} else {
 				for _, orderId := range txn.OrderID {
-					order, err := r.db.FindOrder(orderId)
+					order, err := r.postgresDB.FindOrder(orderId)
 					if err != nil {
 						r.logger.Warnf("Unable to get order from order id: %v", err)
 						continue
 					}
 
 					if _, err := wrkr.OrderValidation(*order); err != nil {
-						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
+
+						if err := r.postgresDB.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
+						if err := r.sqlitedb.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
+							r.logger.Warnf("UpdateOrderStatusById : %s", err)
+							continue
+						}
+
 					} else {
-						if err := r.db.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
+						if err := r.postgresDB.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
+							r.logger.Warnf("UpdateOrderStatusById : %s", err)
+							continue
+						}
+						if err := r.sqlitedb.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusFailedConfirmed); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
 						}
 					}
-					if err := r.db.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
+					if err := r.postgresDB.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
+						r.logger.Warnf("UpdateTxnStatus : %s", err)
+						continue
+					}
+					if err := r.sqlitedb.UpdateTxnStatus(&txn, db.TransactionStatusTypeFailedConfirmed); err != nil {
 						r.logger.Warnf("UpdateTxnStatus : %s", err)
 						continue
 					}
 				}
 			}
 		}
-		time.Sleep(20 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 }
 
