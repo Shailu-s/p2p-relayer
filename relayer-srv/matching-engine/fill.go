@@ -3,8 +3,9 @@ package matching_engine
 import (
 	"errors"
 	"fmt"
-	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 	"math/big"
+
+	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 
 	"github.com/volmexfinance/relayers/relayer-srv/db"
 )
@@ -12,7 +13,6 @@ import (
 func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 	orderLeftFill := orderLeft.OrderFills()
 	orderRightFill := orderRight.OrderFills()
-
 	newOrderLeftFill, newOrderRightFill, err := fillOrder(orderLeft, orderRight, orderLeftFill, orderRightFill)
 	if err != nil {
 		return fmt.Errorf("matchAndUpdateOrders: unable to fill order. %w", err)
@@ -23,9 +23,12 @@ func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 		return errors.New("matchAndUpdateOrders: fill should be greater than 0")
 	}
 
-	updateOrderFillValue(orderLeft, newOrderLeftFill)
-	updateOrderFillValue(orderRight, newOrderRightFill)
-
+	if err := updateOrderFillValue(orderLeft, newOrderLeftFill); err != nil {
+		return err
+	}
+	if err := updateOrderFillValue(orderRight, newOrderRightFill); err != nil {
+		return err
+	}
 	if err := updateOrderStatus(orderLeft); err != nil {
 		return fmt.Errorf("updateOrderStatus: left order failed %w", err)
 	}
@@ -36,16 +39,19 @@ func matchAndUpdateOrders(orderLeft, orderRight *db.Order) error {
 	return nil
 }
 
-func updateOrderFillValue(order *db.Order, newFill *big.Int) {
+func updateOrderFillValue(order *db.Order, newFill *big.Int) error {
 	currentFill := order.OrderFills()
 	currentFill = currentFill.Add(currentFill, newFill)
+	if big_ext.GreaterThan(currentFill, order.MakeAsset().ValueAsBigInt()) {
+		return fmt.Errorf("new fill is greter than matched order %s", currentFill.String())
+	}
 	order.SetOrderFills(currentFill)
+	return nil
 }
 
 func updateOrderStatus(order *db.Order) error {
 	makeAsset := order.MakeAsset().ValueAsBigInt()
 	fills := order.OrderFills()
-
 	if big_ext.Equals(fills, makeAsset) {
 		order.Status = db.MatchedStatusFullMatchFound
 	} else if big_ext.LessThanOrEqual(fills, makeAsset) {
