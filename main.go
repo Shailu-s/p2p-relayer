@@ -73,13 +73,13 @@ func toP2pConfig(config config.P2PConfig) p2p.Config {
 func main() {
 	cfg := config.NewViperConfig()
 	loggerLevel := cfg.ReadLogLevelConfig()
+	sqliteConfig := cfg.GetSqliteConfig()
 	workersCfg := cfg.ReadWorkersConfig()
 	nodeDetailsCfg := cfg.ReadNodeDetailsConfig()
 	matchingCfg := cfg.ReadMatchingConfig()
 	srvURL := cfg.ReadServiceConfig()
 	postgresDbConfig := cfg.ReadDBConfig()
 	p2pCfg := cfg.ReadP2PConfig()
-	sqliteConfig := cfg.GetSqliteConfig()
 
 	logger := NewRootLogger(loggerLevel)
 
@@ -95,14 +95,14 @@ func main() {
 	}()
 
 	nodeDetails := toNodeDetailsConfig(nodeDetailsCfg)
+	dbConfig := toDbConfig(sqliteConfig)
 	matchingConfig := toMatchingConfig(matchingCfg)
 	workerConfigs := toWorkerConfigs(workersCfg)
 	p2pConfig := toP2pConfig(p2pCfg)
 
 	dbURL := postgresDbConfig.AsPostgresDbUrl()
-	dbConfig := toDbConfig(sqliteConfig)
 
-	relayerSrvInstance := relayer_srv.NewRelayerSrv(ctx, logger, dbConfig, dbURL, workerConfigs, p2pConfig, matchingConfig, nodeDetails)
+	relayerSrvInstance := relayer_srv.NewRelayerSrv(ctx, logger, dbURL, dbConfig, workerConfigs, p2pConfig, matchingConfig, nodeDetails)
 	appInstance := app.NewApp(logger, srvURL, relayerSrvInstance)
 
 	appInstance.Run(ctx)

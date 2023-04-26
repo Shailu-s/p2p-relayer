@@ -17,13 +17,12 @@ import (
 
 // WatcherSRV is an instance of watcher and stores related information
 type WatcherSRV struct {
-	Logs             chan types.Log
-	Sub              ethereum.Subscription
-	Logger           *logrus.Logger
-	PostgresDataBase *db.PostgresDataBase
-	SQLiteDataBase   *db.SQLiteDataBase
-	Worker           *worker.Worker
-	GnosisOwnerRes   chan *GnosisChannel
+	Logs           chan types.Log
+	Sub            ethereum.Subscription
+	Logger         *logrus.Logger
+	DataBase       *db.DataBase
+	Worker         *worker.Worker
+	GnosisOwnerRes chan *GnosisChannel
 }
 type GnosisChannel struct {
 	Address   common.Address
@@ -33,7 +32,7 @@ type GnosisChannel struct {
 }
 
 // NewWatcherSRV returns new instance of watcher
-func NewWatcherSRV(wrkr *worker.Worker, db *db.PostgresDataBase, sqlDB *db.SQLiteDataBase, logger *logrus.Logger, gnosisOwnerRes chan *GnosisChannel, chain string) (*WatcherSRV, error) {
+func NewWatcherSRV(wrkr *worker.Worker, db *db.DataBase, logger *logrus.Logger, gnosisOwnerRes chan *GnosisChannel, chain string) (*WatcherSRV, error) {
 	logs := make(chan types.Log)
 
 	subs, err := wrkr.SubscribeToLogs(logs)
@@ -42,13 +41,12 @@ func NewWatcherSRV(wrkr *worker.Worker, db *db.PostgresDataBase, sqlDB *db.SQLit
 	}
 
 	return &WatcherSRV{
-		Logs:             logs,
-		Sub:              subs,
-		Logger:           logger,
-		PostgresDataBase: db,
-		SQLiteDataBase:   sqlDB,
-		Worker:           wrkr,
-		GnosisOwnerRes:   gnosisOwnerRes,
+		Logs:           logs,
+		Sub:            subs,
+		Logger:         logger,
+		DataBase:       db,
+		Worker:         wrkr,
+		GnosisOwnerRes: gnosisOwnerRes,
 	}, nil
 }
 
@@ -115,7 +113,7 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 
 				tLog.OrderID = append(tLog.OrderID, orderId1, orderId2)
 				for i, order_id := range tLog.OrderID {
-					order, err := w.PostgresDataBase.FindOrder(order_id)
+					order, err := w.DataBase.FindOrder(order_id)
 					if err != nil {
 						if errors.Is(err, gorm.ErrRecordNotFound) {
 							continue
@@ -144,24 +142,14 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 						continue
 					}
 					if assetValue.Cmp(newFill) <= 0 {
-						erOrder := w.PostgresDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
+						erOrder := w.DataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
 						if erOrder != nil {
-							w.Logger.Warnf("getSubscribedEventLog :%v", err)
-							continue
-						}
-						errOrder := w.SQLiteDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
-						if errOrder != nil {
 							w.Logger.Warnf("getSubscribedEventLog :%v", err)
 							continue
 						}
 					} else {
-						erOrder := w.PostgresDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusPartialMatchConfirmed)
+						erOrder := w.DataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusPartialMatchConfirmed)
 						if erOrder != nil {
-							w.Logger.Warnf("getSubscribedEventLog :%v", err)
-							continue
-						}
-						errOrder := w.SQLiteDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusPartialMatchConfirmed)
-						if errOrder != nil {
 							w.Logger.Warnf("getSubscribedEventLog :%v", err)
 							continue
 						}
@@ -173,22 +161,14 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 
 				orderID := db.CreateOrderID(canceledOrder.Trader.String(), canceledOrder.Salt.String(), w.Worker.ChainName)
 
-				if ok := w.PostgresDataBase.UpdateOrderStatus(orderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.Canceled); ok != nil {
-					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", err)
-					continue
-				}
-				if ok := w.SQLiteDataBase.UpdateOrderStatus(orderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.Canceled); ok != nil {
+				if ok := w.DataBase.UpdateOrderStatus(orderID, []db.MatchedStatus{}, []db.MatchedStatus{}, db.Canceled); ok != nil {
 					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", err)
 					continue
 				}
 				w.Logger.Infof("Found canceledOrder event and handled successfully with orderID %s", orderID)
 			case "CanceledAll":
 				canceledAllOrder := event.(worker.MatchingEngineAbiCanceledAll)
-				if ok := w.PostgresDataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusBlocked, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed}, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusFullMatchConfirmed}, db.Canceled, w.Worker.ChainName); ok != nil {
-					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", ok)
-					continue
-				}
-				if ok := w.SQLiteDataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusBlocked, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed}, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusFullMatchConfirmed}, db.Canceled, w.Worker.ChainName); ok != nil {
+				if ok := w.DataBase.UpdateOrderStatusByMinSalt(canceledAllOrder.Trader.String(), canceledAllOrder.MinSalt.String(), []db.MatchedStatus{db.MatchedStatusInit, db.MatchedStatusBlocked, db.MatchedStatusFailedConfirmed, db.MatchedStatusFullMatchFound, db.MatchedStatusPartialMatchFound, db.MatchedStatusPartialMatchConfirmed, db.MatchedStatusSentFailed}, []db.MatchedStatus{db.MatchedStatusValidated, db.MatchedStatusValidationConfirmed, db.MatchedStatusSentToContract, db.MatchedStatusFullMatchConfirmed}, db.Canceled, w.Worker.ChainName); ok != nil {
 					w.Logger.Warnf("getSubscribedEventLog : Error in handle cancel order %v", ok)
 					continue
 				}
@@ -209,14 +189,8 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 			}
 		}
 		// Create TransactionLog
-		er := w.PostgresDataBase.CreateTransactionLog(&tLog)
+		er := w.DataBase.CreateTransactionLog(&tLog)
 		if er != nil {
-			// wg.Done()
-			w.Logger.Infof("Error: %v\n", er)
-			continue
-		}
-		err := w.SQLiteDataBase.CreateTransactionLog(&tLog)
-		if err != nil {
 			// wg.Done()
 			w.Logger.Infof("Error: %v\n", er)
 			continue
