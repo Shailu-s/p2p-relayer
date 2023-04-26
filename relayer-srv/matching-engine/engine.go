@@ -212,6 +212,7 @@ func MatchBatchDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail i
 	buyOrder := make([]*db.Order, 0)
 	sellOrder := make([]*db.Order, 0)
 	orderIDs := make([]string, 0)
+
 	buyPriorityList, err := CreatePriorityList(database, false, "Price desc", w.ChainName)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
@@ -227,6 +228,7 @@ func MatchBatchDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail i
 			continue
 		}
 		if !validated {
+			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
 			continue
 		}
 		if buyPriorityList[i].FailCount > maxFail {
@@ -274,17 +276,18 @@ func MatchBatchDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail i
 
 // MatchBatchSellDBOrders fetches buy orders with DB and matched them with proper sell orders
 // returns two arrays of matched orders where first array contains buy orders and second contains sell orders
-func MatchBatchSellDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, error) {
+func MatchBatchSellDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail int64) ([]*db.Order, []*db.Order, []string, error) {
 	buyOrder := make([]*db.Order, 0)
 	sellOrder := make([]*db.Order, 0)
+	orderIDs := make([]string, 0)
+
 	sellPriorityList, err := CreatePriorityList(database, true, "Price", w.ChainName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
+		return nil, nil, nil, fmt.Errorf("UNABLE TO GET ORDER FROM DB: %w", err)
 	}
 	logrus.Infof("Length of buy orders in DB %d", len(sellPriorityList))
 	for i := 0; i < len(sellPriorityList); i++ {
 
-		logrus.Infof("Working on sell order with price %f; trader: %s", sellPriorityList[i].Price, sellPriorityList[i].Trader)
 		logrus.Infof("Working on sell order with price %f; trader: %s", sellPriorityList[i].Price, sellPriorityList[i].Trader)
 		validated, err := w.ValidateOrder(&sellPriorityList[i])
 		if err != nil {
@@ -307,11 +310,11 @@ func MatchBatchSellDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFa
 		if sellPriorityList[i].Status == db.MatchedStatusSentFailed {
 			if _, err := w.OrderValidation(sellPriorityList[i]); err != nil {
 				if err := database.UpdateOrderStatusAndFailCount(sellPriorityList[i].OrderID, db.MatchedStatusBlocked); err != nil {
-					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
+					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 			} else {
 				if err := database.UpdateOrderStatusAndFailCount(sellPriorityList[i].OrderID, db.MatchedStatusFailedConfirmed); err != nil {
-					return nil, nil, fmt.Errorf("unable to updatestatus %e", err)
+					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}
 				continue
 			}
@@ -324,6 +327,7 @@ func MatchBatchSellDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFa
 				logrus.Infof("Unable to match order ID %s with any order due to error %s", sellPriorityList[i].OrderID, err.Error())
 				continue
 			}
+			orderIDs = append(orderIDs, order1.OrderID, order2.OrderID)
 			if order1.CreatedAt < order2.CreatedAt {
 				buyOrder = append(buyOrder, &order1)
 				sellOrder = append(sellOrder, &order2)
@@ -333,7 +337,7 @@ func MatchBatchSellDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFa
 			}
 		}
 	}
-	return buyOrder, sellOrder, nil
+	return buyOrder, sellOrder, orderIDs, nil
 }
 
 // MatchSellDBOrders fetch sell orders with DB and matched them with proper buy orders

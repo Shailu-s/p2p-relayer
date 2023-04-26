@@ -147,10 +147,11 @@ func (r *RelayerSrv) MatchAndSendToP2P(wrkr *worker.Worker) {
 			if err != nil {
 				r.logger.Errorf("Run: Found error in update %s", err.Error())
 			}
-		}
-		err = r.sqlitedb.CreateOrderInBatch(orders)
-		if err != nil {
-			continue
+			err = r.sqlitedb.CreateOrderInBatch(orders)
+			if err != nil {
+				time.Sleep(TimeOut)
+				continue
+			}
 		}
 		time.Sleep(TimeOut)
 		//TODO: to be changed to batch again
