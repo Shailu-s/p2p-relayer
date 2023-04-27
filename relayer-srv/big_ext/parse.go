@@ -42,7 +42,9 @@ func CheckAndParseBigFloat(value string) (*big.Float, error) {
 func ParseBigFloat(value string) *big.Float {
 	result, err := CheckAndParseBigFloat(value)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		zeroVal := new(big.Float).SetInt64(0)
+		return zeroVal
 	}
 
 	return result
