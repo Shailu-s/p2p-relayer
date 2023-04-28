@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
-	"github.com/volmexfinance/relayers/relayer-srv/db"
-	"github.com/volmexfinance/relayers/relayer-srv/validation"
 	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
+	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
+	"github.com/volmexfinance/relayers/relayer-srv/db"
+	"github.com/volmexfinance/relayers/relayer-srv/validation"
 )
 
 type reqAsset struct {
@@ -179,6 +180,12 @@ func (a *App) ordersPostHandler(w http.ResponseWriter, r *http.Request) {
 	if err = validation.VerifyOrderSignature(*dbOrder, a.relayer.GetChainID(chain), a.relayer.GetPositioningContract(chain)); err != nil {
 		a.logger.Errorf("err in validation: %v", err)
 		responError(w, http.StatusBadRequest, "")
+		return
+	}
+	_, err = a.relayer.Workers[chain].OrderValidation(*dbOrder)
+	if err != nil {
+		a.logger.Errorf("err in validation order from contract: %v", err)
+		responError(w, http.StatusInternalServerError, "err in validation order from contract")
 		return
 	}
 

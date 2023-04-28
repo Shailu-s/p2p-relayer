@@ -242,6 +242,7 @@ func MatchBatchDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail i
 		}
 		if buyPriorityList[i].Status == db.MatchedStatusSentFailed {
 			if _, err := w.OrderValidation(buyPriorityList[i]); err != nil {
+				w.Logger.Warnf("order validation failed of orderID %s with error %s", buyPriorityList[i].OrderID, err.Error())
 				if err := database.UpdateOrderStatusAndFailCount(buyPriorityList[i].OrderID, db.MatchedStatusBlocked); err != nil {
 					return nil, nil, nil, fmt.Errorf("unable to updatestatus %e", err)
 				}

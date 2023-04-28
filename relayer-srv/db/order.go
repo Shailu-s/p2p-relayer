@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ import (
 func (db *SQLiteDataBase) CreateOrder(order *Order) error {
 	order.CreatedAt = time.Now().Unix()
 	order.UpdatedAt = time.Now().Unix()
+	order.Fills = "0"
 
 	if order.Status == 0 {
 		order.Status = MatchedStatusInit
@@ -29,7 +31,7 @@ func (db *SQLiteDataBase) CreateOrder(order *Order) error {
 func (db *PostgresDataBase) CreateOrder(order *Order) error {
 	order.CreatedAt = time.Now().Unix()
 	order.UpdatedAt = time.Now().Unix()
-
+	order.Fills = "0"
 	if order.Status == 0 {
 		order.Status = MatchedStatusInit
 	}
@@ -177,6 +179,7 @@ func (db *SQLiteDataBase) UpdateOrderStatusAndFailCount(orderID string, status M
 	order.UpdatedAt = time.Now().Unix()
 	order.Status = status
 	order.FailCount = order.FailCount + 1
+	order.Fills = "0"
 
 	if result := db.DB.Save(&order); result.Error != nil {
 		return result.Error
@@ -194,7 +197,7 @@ func (db *PostgresDataBase) UpdateOrderStatusAndFailCount(orderID string, status
 	order.UpdatedAt = time.Now().Unix()
 	order.Status = status
 	order.FailCount = order.FailCount + 1
-	order.Fills = ""
+	order.Fills = "0"
 
 	if result := db.DB.Save(&order); result.Error != nil {
 		return result.Error
@@ -328,7 +331,7 @@ func (db *SQLiteDataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newStat
 	for _, order := range newOrder {
 		order.UpdatedAt = time.Now().Unix()
 		order.Status = newStatus
-		order.Fills = ""
+		order.Fills = "0"
 
 		var txnLog TransactionLog
 		result := db.DB.
@@ -339,8 +342,14 @@ func (db *SQLiteDataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newStat
 			logrus.Infof("No txn log history found in DB")
 		} else {
 			if txnLog.OrderID[0] == order.OrderID {
+				if strings.EqualFold(txnLog.NewLeftFill, "0") {
+					return fmt.Errorf("fills are zero from txnlog")
+				}
 				order.Fills = txnLog.NewLeftFill
 			} else {
+				if strings.EqualFold(txnLog.NewRightFill, "0") {
+					return fmt.Errorf("fills are zero from txnlog")
+				}
 				order.Fills = txnLog.NewRightFill
 			}
 		}

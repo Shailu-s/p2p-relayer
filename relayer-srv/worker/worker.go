@@ -379,14 +379,15 @@ func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signat
 	// }
 
 	// w.client = ethC
-	estimatedGas, err := w.client.EstimateGas(context.Background(), ethereum.CallMsg{
+	estimatedGas, errContract := w.client.EstimateGas(context.Background(), ethereum.CallMsg{
 		From:  w.config.GnosisContract,
 		To:    &newSafeTx.To,
 		Value: newSafeTx.Value,
 		Data:  newSafeTx.Data,
 	})
-	if err != nil {
-		return "", fmt.Errorf("ExecuteGnosisTx: Unable to estimate gas: %w", err)
+	if errContract != nil {
+		estimatedGas = uint64(w.config.GasLimit)
+		w.Logger.Errorf("Error in estimate gas with reason", errContract.Error())
 	}
 	auth, err := w.getTransactor(uint64(estimatedGas), w.client)
 	if err != nil {
@@ -426,6 +427,9 @@ func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signat
 	)
 	if err != nil {
 		return "", fmt.Errorf("ExecuteGnosisTx: %w", err)
+	}
+	if errContract != nil {
+		return "", fmt.Errorf("executeGnosisTx: This transaction is failed %s with error %s", relayTx.Hash().String(), errContract.Error())
 	}
 	return relayTx.Hash().String(), nil
 }
