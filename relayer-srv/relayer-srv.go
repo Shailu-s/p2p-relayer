@@ -35,7 +35,7 @@ type RelayerSrv struct {
 	sqlitedb       *db.SQLiteDataBase
 	postgresDB     *db.PostgresDataBase
 	matchingCfg    MatchingConfig
-	workers        map[string]*worker.Worker
+	Workers        map[string]*worker.Worker
 	watcher        map[string]*watcher.WatcherSRV
 	GnosisOwnerRes chan *watcher.GnosisChannel
 }
@@ -95,7 +95,7 @@ func NewRelayerSrv(ctx context.Context, logger *logrus.Logger, dbConfig db.Confi
 		logger:      logger.WithField("layer", "relayer"),
 		sqlitedb:    sqliteDBConn,
 		postgresDB:  pgDbConn,
-		workers:     workers,
+		Workers:     workers,
 		matchingCfg: matchingCfg,
 		watcher:     watchers,
 	}
@@ -110,7 +110,7 @@ func signData(data []byte, privKey string) ([]byte, error) {
 }
 
 func (r *RelayerSrv) Run() {
-	for i, worker := range r.workers {
+	for i, worker := range r.Workers {
 		go r.MatchAndSendToP2P(worker)
 		go r.RetryMatching(worker)
 		r.watcher[i].Run()
@@ -199,6 +199,7 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 		if len(orders) > 0 {
 			for _, order := range orders {
 				if _, err := wrkr.OrderValidation(*order); err != nil {
+					r.logger.Warnf("order validation failed of orderID %s with error %s", order.OrderID, err.Error())
 					if err := r.postgresDB.UpdateOrderStatusAndFailCount(order.OrderID, db.MatchedStatusBlocked); err != nil {
 						r.logger.Warnf("UpdateOrderStatusById : %s", err)
 						continue
@@ -258,7 +259,7 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 					}
 
 					if _, err := wrkr.OrderValidation(*order); err != nil {
-
+						r.logger.Warnf("order validation failed of orderID %s with error %s", order.OrderID, err.Error())
 						if err := r.postgresDB.UpdateOrderStatusAndFailCount(orderId, db.MatchedStatusBlocked); err != nil {
 							r.logger.Warnf("UpdateOrderStatusById : %s", err)
 							continue
@@ -294,16 +295,16 @@ func (r *RelayerSrv) RetryMatching(wrkr *worker.Worker) {
 }
 
 func (r *RelayerSrv) GetChainID(chainName string) int64 {
-	wrkr := r.workers[chainName]
+	wrkr := r.Workers[chainName]
 	return wrkr.GetChainID()
 }
 
 func (r *RelayerSrv) GetPeripheryContract(chain string) string {
-	wrkr := r.workers[chain]
+	wrkr := r.Workers[chain]
 	return wrkr.GetPeripheryContract().String()
 }
 
 func (r *RelayerSrv) GetPositioningContract(chain string) string {
-	wrkr := r.workers[chain]
+	wrkr := r.Workers[chain]
 	return wrkr.GetPositioningContract().String()
 }

@@ -378,15 +378,23 @@ func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signat
 	// 	return "", fmt.Errorf("ExecuteGnosisTx: Unable to dial RPC %w", err)
 	// }
 
-	// w.client = ethC
-	estimatedGas, err := w.client.EstimateGas(context.Background(), ethereum.CallMsg{
+	header, err := w.client.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		return "", fmt.Errorf("ExecuteGnosisTx: error in get auth %w", err)
+	}
+
+	// Get the gas limit of the latest block
+	gasLimit := header.GasLimit
+
+	estimatedGas, errContract := w.client.EstimateGas(context.Background(), ethereum.CallMsg{
 		From:  w.config.GnosisContract,
 		To:    &newSafeTx.To,
 		Value: newSafeTx.Value,
 		Data:  newSafeTx.Data,
 	})
-	if err != nil {
-		return "", fmt.Errorf("ExecuteGnosisTx: Unable to estimate gas: %w", err)
+	if errContract != nil {
+		estimatedGas = gasLimit
+		w.Logger.Errorf("Error in estimate gas with reason", errContract.Error())
 	}
 	auth, err := w.getTransactor(uint64(estimatedGas), w.client)
 	if err != nil {
@@ -426,6 +434,9 @@ func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signat
 	)
 	if err != nil {
 		return "", fmt.Errorf("ExecuteGnosisTx: %w", err)
+	}
+	if errContract != nil {
+		return "", fmt.Errorf("executeGnosisTx: This transaction is failed %s with error %s", relayTx.Hash().String(), errContract.Error())
 	}
 	return relayTx.Hash().String(), nil
 }
@@ -612,7 +623,7 @@ func (w *Worker) GetLastPrice(index *big.Int) (*big.Int, error) {
 	return markTwap, err
 }
 
-func (w *Worker) GetIndexPrice(index *big.Int) (*big.Int, error) {
+func (w *Worker) GetIndexLastPrice(index *big.Int) (*big.Int, error) {
 	indexPriceOracle, _ := IndexPriceOracle.NewIndexPriceOracle(w.indexPriceOracle, w.client)
 	indexTwap, err := indexPriceOracle.GetLastPrice(getCallOpts(), index)
 	return indexTwap, err
@@ -641,7 +652,7 @@ func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
 	var triggeredPrice *big.Int
 	switch order.OrderType {
 	case database.STOP_LOSS_INDEX_PRICE, database.TAKE_PROFIT_INDEX_PRICE:
-		triggeredPrice, err = w.GetIndexPrice(index)
+		triggeredPrice, err = w.GetIndexLastPrice(index)
 		if err != nil {
 			return false, err
 		}
