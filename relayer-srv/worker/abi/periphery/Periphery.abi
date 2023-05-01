@@ -380,7 +380,7 @@
       ],
       "name": "depositToVault",
       "outputs": [],
-      "stateMutability": "payable",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -883,7 +883,7 @@
           "type": "address"
         },
         {
-          "internalType": "address payable",
+          "internalType": "address",
           "name": "_to",
           "type": "address"
         },

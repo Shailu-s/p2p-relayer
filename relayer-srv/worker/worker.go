@@ -378,7 +378,14 @@ func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signat
 	// 	return "", fmt.Errorf("ExecuteGnosisTx: Unable to dial RPC %w", err)
 	// }
 
-	// w.client = ethC
+	header, err := w.client.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		return "", fmt.Errorf("ExecuteGnosisTx: error in get auth %w", err)
+	}
+
+	// Get the gas limit of the latest block
+	gasLimit := header.GasLimit
+
 	estimatedGas, errContract := w.client.EstimateGas(context.Background(), ethereum.CallMsg{
 		From:  w.config.GnosisContract,
 		To:    &newSafeTx.To,
@@ -386,7 +393,7 @@ func (w *Worker) ExecuteGnosisTx(orderLeft, orderRight []*database.Order, signat
 		Data:  newSafeTx.Data,
 	})
 	if errContract != nil {
-		estimatedGas = uint64(w.config.GasLimit)
+		estimatedGas = gasLimit
 		w.Logger.Errorf("Error in estimate gas with reason", errContract.Error())
 	}
 	auth, err := w.getTransactor(uint64(estimatedGas), w.client)

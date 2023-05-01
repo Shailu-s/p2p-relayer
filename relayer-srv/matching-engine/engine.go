@@ -228,7 +228,7 @@ func MatchBatchDBOrders(database *db.SQLiteDataBase, w *worker.Worker, maxFail i
 			continue
 		}
 		if !validated {
-			logrus.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
+			w.Logger.Infof("Buy limit order price verification failed with  ID: %f trader: %s ", buyPriorityList[i].OrderID, buyPriorityList[i].Trader)
 			continue
 		}
 		if buyPriorityList[i].FailCount > maxFail {

@@ -70,6 +70,12 @@
           "internalType": "uint256",
           "name": "indexTwap",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "int256",
+          "name": "fundingRate",
+          "type": "int256"
         }
       ],
       "name": "FundingUpdated",
@@ -156,10 +162,10 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "address",
+          "indexed": false,
+          "internalType": "address[2]",
           "name": "trader",
-          "type": "address"
+          "type": "address[2]"
         },
         {
           "indexed": true,
@@ -169,39 +175,33 @@
         },
         {
           "indexed": false,
-          "internalType": "int256",
+          "internalType": "int256[2]",
           "name": "exchangedPositionSize",
-          "type": "int256"
+          "type": "int256[2]"
         },
         {
           "indexed": false,
-          "internalType": "int256",
+          "internalType": "int256[2]",
           "name": "exchangedPositionNotional",
-          "type": "int256"
+          "type": "int256[2]"
         },
         {
           "indexed": false,
-          "internalType": "uint256",
+          "internalType": "uint256[2]",
           "name": "fee",
-          "type": "uint256"
+          "type": "uint256[2]"
         },
         {
           "indexed": false,
-          "internalType": "uint256",
-          "name": "orderIndexPrice",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "bytes4",
+          "internalType": "bytes4[2]",
           "name": "orderType",
-          "type": "bytes4"
+          "type": "bytes4[2]"
         },
         {
           "indexed": false,
-          "internalType": "bool",
+          "internalType": "bool[2]",
           "name": "isShort",
-          "type": "bool"
+          "type": "bool[2]"
         }
       ],
       "name": "PositionChanged",

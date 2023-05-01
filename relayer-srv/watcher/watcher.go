@@ -140,7 +140,7 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 					}
 
 					if currentFill.Cmp(newFill) > 0 {
-						w.Logger.Warnf("getSubscribedEventLog: Fill stored is greater than fill fetched from event%v", err)
+						w.Logger.Warnf("getSubscribedEventLog: Fill stored %s greater than fill fetched from event %s", currentFill.String(), newFill.String())
 						continue
 					}
 					if assetValue.Cmp(newFill) <= 0 {
