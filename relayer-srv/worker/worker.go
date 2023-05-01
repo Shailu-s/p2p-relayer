@@ -623,7 +623,7 @@ func (w *Worker) GetLastPrice(index *big.Int) (*big.Int, error) {
 	return markTwap, err
 }
 
-func (w *Worker) GetIndexPrice(index *big.Int) (*big.Int, error) {
+func (w *Worker) GetIndexLastPrice(index *big.Int) (*big.Int, error) {
 	indexPriceOracle, _ := IndexPriceOracle.NewIndexPriceOracle(w.indexPriceOracle, w.client)
 	indexTwap, err := indexPriceOracle.GetLastPrice(getCallOpts(), index)
 	return indexTwap, err
@@ -652,7 +652,7 @@ func (w *Worker) ValidateOrder(order *database.Order) (bool, error) {
 	var triggeredPrice *big.Int
 	switch order.OrderType {
 	case database.STOP_LOSS_INDEX_PRICE, database.TAKE_PROFIT_INDEX_PRICE:
-		triggeredPrice, err = w.GetIndexPrice(index)
+		triggeredPrice, err = w.GetIndexLastPrice(index)
 		if err != nil {
 			return false, err
 		}
