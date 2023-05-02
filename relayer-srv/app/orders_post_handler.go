@@ -182,12 +182,12 @@ func (a *App) ordersPostHandler(w http.ResponseWriter, r *http.Request) {
 		responError(w, http.StatusBadRequest, "")
 		return
 	}
-	_, err = a.relayer.Workers[chain].OrderValidation(*dbOrder)
-	if err != nil {
-		a.logger.Errorf("err in validation order from contract: %v", err)
-		responError(w, http.StatusInternalServerError, "err in validation order from contract")
-		return
-	}
+	// _, err = a.relayer.Workers[chain].OrderValidation(*dbOrder)
+	// if err != nil {
+	// 	a.logger.Errorf("err in validation order from contract: %v", err)
+	// 	responError(w, http.StatusInternalServerError, "err in validation order from contract")
+	// 	return
+	// }
 
 	// insert order in the database
 	if err = a.relayer.InsertOrder(dbOrder); err != nil {
