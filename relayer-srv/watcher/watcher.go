@@ -141,7 +141,6 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 
 					if currentFill.Cmp(newFill) > 0 {
 						w.Logger.Warnf("getSubscribedEventLog: Fill stored %s greater than fill fetched from event %s", currentFill.String(), newFill.String())
-						continue
 					}
 					if assetValue.Cmp(newFill) <= 0 {
 						erOrder := w.PostgresDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
