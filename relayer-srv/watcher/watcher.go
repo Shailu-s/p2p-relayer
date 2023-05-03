@@ -140,11 +140,11 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 					} else {
 						newFill = MatchingEngineOrdersFilled.Fills[1]
 					}
-					result := currentFill.Sub(currentFill, newFill)
+					result := new(big.Int).Sub(currentFill, newFill)
 					if result.Cmp(DUST) > 0 {
 						w.Logger.Warnf("getSubscribedEventLog: Fill stored %s greater than fill fetched from event %s", currentFill.String(), newFill.String())
 					}
-					resultFills := assetValue.Sub(assetValue, newFill)
+					resultFills := new(big.Int).Sub(assetValue, newFill)
 
 					if resultFills.Cmp(DUST) <= 0 {
 						erOrder := w.PostgresDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
