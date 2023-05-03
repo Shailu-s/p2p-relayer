@@ -32,6 +32,8 @@ type GnosisChannel struct {
 	Chain     string
 }
 
+var DUST = big.NewInt(1000)
+
 // NewWatcherSRV returns new instance of watcher
 func NewWatcherSRV(wrkr *worker.Worker, db *db.PostgresDataBase, sqlDB *db.SQLiteDataBase, logger *logrus.Logger, gnosisOwnerRes chan *GnosisChannel, chain string) (*WatcherSRV, error) {
 	logs := make(chan types.Log)
@@ -138,11 +140,13 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 					} else {
 						newFill = MatchingEngineOrdersFilled.Fills[1]
 					}
-
-					if currentFill.Cmp(newFill) > 0 {
+					result := currentFill.Sub(currentFill, newFill)
+					if result.Cmp(DUST) > 0 {
 						w.Logger.Warnf("getSubscribedEventLog: Fill stored %s greater than fill fetched from event %s", currentFill.String(), newFill.String())
 					}
-					if assetValue.Cmp(newFill) <= 0 {
+					resultFills := assetValue.Sub(assetValue, newFill)
+
+					if resultFills.Cmp(DUST) <= 0 {
 						erOrder := w.PostgresDataBase.HandleOrderStatusAndFills(order.OrderID, newFill.String(), []db.MatchedStatus{}, []db.MatchedStatus{}, db.MatchedStatusFullMatchConfirmed)
 						if erOrder != nil {
 							w.Logger.Warnf("getSubscribedEventLog :%v", err)
