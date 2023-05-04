@@ -3,7 +3,6 @@ package db
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -329,11 +328,10 @@ func (db *PostgresDataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newSt
 func (db *SQLiteDataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newStatus MatchedStatus) error {
 	// TODO: Don't use for loop to batch update order
 	for _, order := range newOrder {
-		order.UpdatedAt = time.Now().Unix()
-		order.Status = newStatus
-		order.Fills = "0"
+		query := db.DB.Model(Order{}).Where("order_id = ?", order.OrderID)
 
 		var txnLog TransactionLog
+		fills := "0"
 		result := db.DB.
 			Model(TransactionLog{}).
 			Where("order_id LIKE ?", fmt.Sprintf("%%%s%%", order.OrderID)).
@@ -342,19 +340,19 @@ func (db *SQLiteDataBase) UpdateFillAndStatusByTxnLog(newOrder []*Order, newStat
 			logrus.Infof("No txn log history found in DB")
 		} else {
 			if txnLog.OrderID[0] == order.OrderID {
-				if strings.EqualFold(txnLog.NewLeftFill, "0") {
-					return fmt.Errorf("fills are zero from txnlog")
-				}
-				order.Fills = txnLog.NewLeftFill
+				fills = txnLog.NewLeftFill
 			} else {
-				if strings.EqualFold(txnLog.NewRightFill, "0") {
-					return fmt.Errorf("fills are zero from txnlog")
-				}
-				order.Fills = txnLog.NewRightFill
+				fills = txnLog.NewRightFill
 			}
 		}
-		if result := db.DB.Save(&order); result.Error != nil {
-			return result.Error
+
+		toUpdate := map[string]interface{}{
+			"status":     newStatus,
+			"updated_at": time.Now().Unix(),
+			"fills":      fills,
+		}
+		if err := query.Updates(toUpdate).Error; err != nil {
+			return err
 		}
 	}
 	return nil

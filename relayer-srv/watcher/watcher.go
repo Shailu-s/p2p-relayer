@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/sirupsen/logrus"
+	"github.com/volmexfinance/relayers/relayer-srv/big_ext"
 	"github.com/volmexfinance/relayers/relayer-srv/db"
 	"github.com/volmexfinance/relayers/relayer-srv/utils"
 	"github.com/volmexfinance/relayers/relayer-srv/worker"
@@ -100,6 +101,7 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 				w.Logger.Infof("Error: %v\n", err)
 				continue
 			}
+			lastTxnLog, err := w.PostgresDataBase.FindLatestTxnLogByHash(tLog.TransactionHash)
 			switch eventType {
 			case "OrdersFilled":
 				MatchingEngineOrdersFilled := event.(worker.MatchingEngineAbiOrdersFilled)
@@ -140,6 +142,19 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 					} else {
 						newFill = MatchingEngineOrdersFilled.Fills[1]
 					}
+					if lastTxnLog.OrderID[0] == order_id {
+						fill, err := new(big.Int).SetString(lastTxnLog.NewLeftFill, 10)
+						if big_ext.LessThan(newFill, fill) {
+							w.Logger.Warnf("getSubscribedEventLog :%v", err)
+							continue
+						}
+					} else if lastTxnLog.OrderID[1] == order_id {
+						fill, err := new(big.Int).SetString(lastTxnLog.NewRightFill, 10)
+						if big_ext.LessThan(newFill, fill) {
+							w.Logger.Warnf("getSubscribedEventLog :%v", err)
+							continue
+						}
+					}
 					result := new(big.Int).Sub(currentFill, newFill)
 					if result.Cmp(DUST) > 0 {
 						w.Logger.Warnf("getSubscribedEventLog: Fill stored %s greater than fill fetched from event %s", currentFill.String(), newFill.String())
@@ -169,6 +184,19 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 							continue
 						}
 					}
+				}
+				// Create TransactionLog
+				er := w.PostgresDataBase.CreateTransactionLog(&tLog)
+				if er != nil {
+					// wg.Done()
+					w.Logger.Infof("Error: %v\n", er)
+					continue
+				}
+				err := w.SQLiteDataBase.CreateTransactionLog(&tLog)
+				if err != nil {
+					// wg.Done()
+					w.Logger.Infof("Error: %v\n", er)
+					continue
 				}
 				w.Logger.Infof("Found matched event and handled successfully with orderID %s and order ID %s", orderId1, orderId2)
 			case "Canceled":
@@ -210,19 +238,6 @@ func (w *WatcherSRV) getSubscribedEventLog(logs chan types.Log) error {
 				w.GnosisOwnerRes <- &GnosisChannel{Threshold: changedThreshold.Threshold, EventType: "ChangedThreshold", Chain: w.Worker.ChainName}
 				w.Logger.Infof("Found ChangedThreshold event and handled successfully with threshold %d", changedThreshold.Threshold.Int64())
 			}
-		}
-		// Create TransactionLog
-		er := w.PostgresDataBase.CreateTransactionLog(&tLog)
-		if er != nil {
-			// wg.Done()
-			w.Logger.Infof("Error: %v\n", er)
-			continue
-		}
-		err := w.SQLiteDataBase.CreateTransactionLog(&tLog)
-		if err != nil {
-			// wg.Done()
-			w.Logger.Infof("Error: %v\n", er)
-			continue
 		}
 		time.Sleep(2 * time.Second)
 	}

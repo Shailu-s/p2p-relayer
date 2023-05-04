@@ -89,21 +89,14 @@ func fillOrder(leftOrder, rightOrder *db.Order, leftOrderFill, rightOrderFill *b
 		}
 
 		return newLeftOrderFill, newRightOrderFill, nil
-	} else {
-
-		// else fill right order
-		newLeftOrderFill, newRightOrderFill, err = fillRight(leftMakeValue, leftTakeValue, rightBaseValue, rightQuoteValue)
-		if err != nil {
-			newLeftOrderFill, newRightOrderFill, err = fillLeft(leftBaseValue, leftQuoteValue, rightMakeValue, rightTakeValue)
-			if err != nil {
-				return nil, nil, fmt.Errorf("fillOrder: unable to filling orderRight %w", err)
-			}
-
-			return newLeftOrderFill, newRightOrderFill, nil
-		}
-
-		return newLeftOrderFill, newRightOrderFill, nil
 	}
+	// else fill right order
+	newLeftOrderFill, newRightOrderFill, err = fillRight(leftMakeValue, leftTakeValue, rightBaseValue, rightQuoteValue)
+	if err != nil {
+		return nil, nil, fmt.Errorf("fillOrder: unable to filling orderRight %w", err)
+	}
+
+	return newLeftOrderFill, newRightOrderFill, nil
 }
 
 func calculateRemaining(order *db.Order, fill *big.Int) (*big.Int, *big.Int, error) {
