@@ -1,6 +1,6 @@
-# Volmex Perpetual Futures Exchange Relayer Nodes
+# Perpetual Futures Exchange Relayer Nodes
 
-The distributed network of relayer nodes matches bids and asks from the Volmex perpetual futures exchange.
+The distributed network of relayer nodes matches bids and asks from the perpetual futures exchange.
 
 ## Contributing
 
@@ -9,20 +9,23 @@ The distributed network of relayer nodes matches bids and asks from the Volmex p
 * Go 1.19.+
 * Docker
 
-### Bootstrap
+### Important Modules
 
-1. Clone the repository.
-2. Run the `bootstrap` task to generate a local development configuration:
-    ```bash
-    make bootstrap
-    ```
-3. Update the generated `config.json` file with the required credentials (e.g., `private_key`).
-4. Run `make all` to perform a clean build (and run the tests).
+1. Watcher
+2. Worker
+3. Matching-engine
+4. P2P Service
+5. Processor
 
-    ```bash
-    # make all = make clean + make build + make test
-    make all
-    ```
+**Watcher**
+
+Our Watcher Service acts as the vigilant guardian, constantly monitoring the blockchain for events emitted by our smart contracts. Using the WebSocket Secure (WSS) protocol, it subscribes to these events, ensuring a real-time connection to the on-chain activities. Every emitted event is meticulously logged, becoming a narrative of the blockchain's activities. These events serve as confirmation triggers, guiding our Watcher Service to update our database with precision and finesse, aligning with the order fillings on the Ethereum contracts.
+
+**Worker**
+
+On the other end of our decentralized symphony is the Worker Service, a diligent laborer interfacing directly with the Ethereum blockchain. Leveraging Application Binary Interfaces (ABIs), we generate binary files with abigen, transforming abstract contract interactions into executable commands. This worker orchestrates the validation of matched orders, sending them into the heart of our smart contracts. Here, the magic happens – our contracts intelligently match orders, orchestrating a dance of cryptographic validations, and seamlessly updating fills as the Ethereum blockchain state evolves.
+
+In this orchestrated ballet of on-chain and off-chain interactions, our services collaboratively uphold the integrity of our decentralized system, ensuring order confirmations are not just events on the blockchain but a harmonious convergence of technology and trust.
 
 ### Build the binary
 
@@ -74,3 +77,4 @@ The project `Makefile` includes a `help` task that lists all available developme
 ```bash
 make help
 ```
+
